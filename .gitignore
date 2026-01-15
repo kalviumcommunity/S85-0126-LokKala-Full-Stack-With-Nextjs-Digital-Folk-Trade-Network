@@ -1,0 +1,31 @@
+
+# Environment variables
+.env*.local
+.env
+!.env.example
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Sensitive files
+*.pem
+*.key
+*.cert
+*.env
+
+# Next.js build
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
