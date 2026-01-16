@@ -1,84 +1,144 @@
-# Digital Folk Trade Network
+Environment-Aware Builds & Secure Secrets Management
+Overview
 
-## Project Setup
+Digital Folk Trade Network is designed to support multiple deployment environments — development, staging, and production — to ensure safe testing, reliable releases, and protection of sensitive data. Each environment is isolated using dedicated configuration files and secure secret management practices, following real-world DevOps standards.
 
-This project uses **Next.js**, **TypeScript**, **ESLint**, **Prettier**, **Husky**, and **lint-staged** for a modern, maintainable codebase.
+This setup prevents accidental data corruption, reduces deployment risk, and ensures that changes are validated before reaching live users.
 
----
+Environment Segregation Strategy
 
-## Code Quality Tools
+The project uses separate environment configuration files to control behavior across different deployment stages:
 
-### ESLint
+.env.development
+.env.staging
+.env.production
+.env.example
 
-- **Config:** Extends `next/core-web-vitals` and `plugin:prettier/recommended`
-- **Rules:**
-  - `"no-console": "warn"` – Warns if `console.log` is used, keeping code clean.
-  - `"semi": ["error", "always"]` – Enforces semicolons for consistency.
-  - `"quotes": ["error", "double"]` – Enforces double quotes for uniformity.
 
-### Prettier
+Each file contains only the variables required for that environment, such as API endpoints, service URLs, and feature flags.
 
-- **Config:**
-  - `"singleQuote": false` – Uses double quotes.
-  - `"semi": true` – Always adds semicolons.
-  - `"tabWidth": 2` – Indents with 2 spaces.
-  - `"trailingComma": "es5"` – Adds trailing commas where valid in ES5.
+Example
+# .env.development
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_APP_NAME=Digital Folk Trade Network (Dev)
 
-### TypeScript
+# .env.staging
+NEXT_PUBLIC_API_URL=https://staging.digitalfolk.api
+NEXT_PUBLIC_APP_NAME=Digital Folk Trade Network (Staging)
 
-- **Strict Configuration:**  
-  - `"strict": true`, `"noImplicitAny": true`, `"noUnusedLocals": true`, `"noUnusedParameters": true`, `"forceConsistentCasingInFileNames": true`
-  - These settings catch undefined types, unused code, and casing mismatches early.
+# .env.production
+NEXT_PUBLIC_API_URL=https://api.digitalfolktrade.com
+NEXT_PUBLIC_APP_NAME=Digital Folk Trade Network
 
-### Husky & lint-staged
 
-- **Pre-commit hooks:**  
-  - Automatically run ESLint and Prettier on staged files before each commit.
-  - Prevents commits with lint errors or formatting issues.
+Only .env.example is tracked in GitHub. All real environment files are excluded via .gitignore to prevent accidental exposure of sensitive information.
 
----
+Why Environment Segregation is Essential
 
-## Why These Rules Matter
+Environment segregation ensures that:
 
-- **Consistency:** Enforced formatting and style rules make code easier to read and maintain.
-- **Error Prevention:** Strict TypeScript and linting catch bugs before code is merged.
-- **Automation:** Pre-commit hooks save time and keep the codebase clean.
+Development experiments never affect live users
 
----
+Staging testing never touches production data
 
-## Example: Linting in Action
+Production remains stable and predictable
 
-If you try to commit code like this:
-```js
-console.log('Hello world')
-const unused = 42
-```
-You’ll see output like:
-```
-warning  Unexpected console statement  no-console
-error    'unused' is assigned a value but never used  no-unused-vars
-error    Missing semicolon  semi
-```
-The commit will be blocked until you fix these issues.
+In the context of Digital Folk Trade Network, this is critical. Features such as artist onboarding, product listings, and buyer interactions are tested in staging using mock or test data. These changes are only promoted to production after validation, ensuring that real tribal artists and buyers are never impacted by incomplete or unstable features.
 
----
+This approach reduces the risk of:
 
-## Screenshots
+Data corruption
 
-_Add screenshots of linting errors in VS Code or terminal here._
+Accidental feature exposure
 
----
+Service downtime
 
-## How to Use
+By maintaining strict boundaries between environments, deployments become safer and more controlled.
 
-1. Clone the repo and run `npm install`.
-2. Make changes in a new branch.
-3. Stage and commit your changes.
-4. If linting fails, fix the issues and commit again.
-5. Push your branch and open a pull request.
+Secure Secret Management
 
----
+All sensitive information such as:
 
-## Questions?
+Database credentials
 
-Open an issue or contact the maintainer for help.
+API keys
+
+Authentication secrets
+
+Third-party service tokens
+
+are never hardcoded in the repository.
+
+Instead, they are managed using GitHub Secrets and injected into the application at build or runtime.
+
+Example
+
+Secrets stored in GitHub:
+
+DATABASE_URL
+
+JWT_SECRET
+
+CLOUDINARY_API_KEY
+
+These are referenced in the CI/CD pipeline as environment variables:
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+
+The application accesses them using:
+
+process.env.DATABASE_URL
+
+
+This ensures that secrets are:
+
+Not visible in code
+
+Not exposed in commits
+
+Not leaked in logs
+
+Each environment uses its own isolated set of secrets, eliminating the risk of cross-environment contamination.
+
+Case Study Analysis – “The Staging Secret That Broke Production”
+
+In the ShopLite incident, staging database credentials were mistakenly used in the production environment, overwriting live product data. This failure occurred due to:
+
+Lack of strict environment separation
+
+Poor secret management discipline
+
+Inadequate CI/CD safeguards
+
+If ShopLite had enforced separate environment configurations and environment-scoped secrets, this incident would have been prevented. Production builds would only have access to production credentials, and staging credentials would be completely inaccessible in the production pipeline.
+
+In Digital Folk Trade Network, this risk is mitigated by:
+
+Using dedicated .env.development, .env.staging, and .env.production files
+
+Storing secrets securely in GitHub Secrets with environment isolation
+
+Ensuring the CI/CD pipeline injects only environment-appropriate secrets
+
+This guarantees that staging data can never overwrite production data and that production deployments remain safe and controlled.
+
+CI/CD Reliability and Safety
+
+Environment-aware builds combined with secure secret management create predictable and repeatable deployments. This improves CI/CD reliability by ensuring:
+
+The same code behaves correctly across all environments
+
+Sensitive data is protected throughout the pipeline
+
+Human error is minimized through automation and isolation
+
+For Digital Folk Trade Network, this setup ensures that new features, performance improvements, and UI changes are thoroughly tested before reaching real users, protecting both platform integrity and user trust.
+
+Reflection
+
+Multi-environment setups are not optional in modern deployments. They are essential for scaling safely, maintaining data integrity, and delivering reliable software. By implementing environment segregation and secure secret management, Digital Folk Trade Network follows production-grade deployment practices used by real-world engineering teams.
+
+This approach significantly reduces operational risk and ensures that the platform can grow without compromising stability or security.
