@@ -25,10 +25,6 @@ We maintain strict separation between environments using dedicated configuration
     ├── staging.js
     ├── production.js
     └── test.js
-```
-
-**Key Features:**
-- Each environment has isolated configurations
 - Automatic environment detection via `NODE_ENV`
 - Validation prevents cross-environment contamination
 - Separate database instances per environment
@@ -48,10 +44,6 @@ jobs:
     if: github.ref == 'refs/heads/staging'
     environment: staging
     env:
-      DB_HOST: ${{ secrets.STAGING_DB_HOST }}
-      DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-      API_KEY: ${{ secrets.STAGING_API_KEY }}
-
   deploy-production:
     if: github.ref == 'refs/heads/main'
     environment: production  
@@ -115,7 +107,6 @@ FROM node:18-alpine as runtime
 # Secrets injected at runtime via:
 # docker run -e DB_PASSWORD=... or docker secrets
 ```
-
 ## Project Structure
 ```
 project/
@@ -216,6 +207,7 @@ DATABASE_URL="postgres://staging-user@staging-db" \
 npm start
 ```
 
+<<<<<<< Updated upstream
 ### Test 2: Validate Environment Configuration
 ```bash
 npm run validate-config
@@ -227,12 +219,33 @@ npm run validate-config
 
 ## Benefits Achieved
 
-✅ **No More Configuration Bleed** - Environments completely isolated  
-✅ **Automated Safety Nets** - Multiple checks prevent human error  
-✅ **Secure Secret Handling** - Never exposed in code or logs  
-✅ **Quick Recovery** - Environment-specific rollbacks  
-✅ **Audit Compliance** - All secret access tracked  
-✅ **Developer Confidence** - Safe to experiment in staging  
+- **Authentication:** JWT with refresh tokens
+- **Authorization:** Role-based access control (RBAC)
+- **Input Validation:** Zod schemas for all inputs
+- **File Upload:** Virus scanning with ClamAV
+
+- **Database:** Connection pooling, read replicas
+- **Monitoring:** Real-time performance metrics
+
+
+### Branch Naming Convention
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation updates
+- `refactor/` - Code refactoring
+- `test/` - Test additions
+
+### Commit Message Convention
+```
+feat: add artist verification flow
+fix: resolve image upload issue
+docs: update API documentation
+style: format component code
+refactor: simplify authentication logic
+test: add unit tests for checkout
+```
+
+>>>>>>> Stashed changes
 
 ## Video Demonstration
 [Link to Video] - Shows:
@@ -241,6 +254,7 @@ npm run validate-config
 3. Safety validation in action
 4. Recovery procedures
 
+<<<<<<< Updated upstream
 ## Conclusion
 This implementation provides a bulletproof system that would have prevented the ShopLite incident through:
 1. **Mandatory environment segregation**
@@ -249,3 +263,53 @@ This implementation provides a bulletproof system that would have prevented the 
 4. **Clear separation of concerns**
 
 By adopting these practices, teams can deploy with confidence, knowing that staging configurations will never accidentally reach production.
+| Frontend Lead | [Sejal] | UI/UX, Components |
+| Backend Lead | [Rajeev] | APIs, Database |
+| DevOps Engineer | [Shivang] | Infrastructure, CI/CD |
+
+- Artists retain full copyright of their artwork
+- Zero commission on sales
+- Optional cultural preservation clause
+- Transparency in all transactions
+
+## 🙏 Acknowledgments
+- Tribal art communities for their guidance
+- Cultural heritage preservation organizations
+- Open source community for amazing tools
+- Early adopters and beta testers
+
+---
+
+<div align="center">
+  <h3>🌟 Supporting Cultural Heritage Through Technology 🌟</h3>
+  <p>Every purchase helps preserve traditional art forms for future generations</p>
+</div>
+
+---
+
+**Made with ❤️ for artists everywhere**
+![alt text](<Screenshot 2026-01-15 at 2.59.34 PM.png>)
+>>>>>>> Stashed changes
+
+
+
+Understanding Cloud Deployments: Docker → CI/CD → AWS/Azure
+Docker
+
+Docker is used to containerize the application along with its dependencies. This ensures the app runs consistently across different environments such as development and production.
+
+CI/CD
+
+A CI/CD pipeline using GitHub Actions automates the build process. Whenever code is pushed to the main branch, dependencies are installed and the project is built automatically, reducing manual errors.
+
+Cloud Deployment (AWS/Azure)
+
+The containerized application can be deployed to cloud platforms like AWS or Azure using managed services such as AWS Elastic Beanstalk or Azure App Service. These platforms handle infrastructure, scaling, and availability.
+
+Environment Variables & Secrets
+
+Sensitive values such as API keys and database URLs are managed using environment variables and secret managers instead of being committed to the repository. This supports secure configuration across development, staging, and production environments.
+
+Reflection
+
+Understanding how Docker, CI/CD, and cloud services work together was the most challenging part. Docker simplified environment consistency, and CI/CD improved reliability. In future deployments, I would explore full automation and infrastructure-as-code tools.
