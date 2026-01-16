@@ -10,7 +10,7 @@ export async function GET() {
   const hasJwtSecret = !!ENV.JWT_SECRET;
   
   // Accessing client-side variables (also safe on server)
-  const apiBaseUrl = ENV.NEXT_PUBLIC_API_BASE_URL;
+  //const apiBaseUrl = ENV.NEXT_PUBLIC_API_BASE_URL;
   
   return NextResponse.json({
     message: 'Environment Variables Demo - Server Side',
