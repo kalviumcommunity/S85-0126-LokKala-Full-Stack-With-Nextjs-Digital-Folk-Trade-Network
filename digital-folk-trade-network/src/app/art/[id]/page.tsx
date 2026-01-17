@@ -1,3 +1,6 @@
+import DashboardLayout from '@/app/dashboard-layout';
+import ArtDetails from '@/components/art/ArtDetails';
+
 export const revalidate = 60;
 
 type Artwork = {
@@ -22,17 +25,17 @@ export default async function ArtDetail({
 
   if (!art) {
     return (
-      <main>
-        <h1>Artwork Not Found</h1>
-      </main>
+      <DashboardLayout title="Art Details">
+        <div className="rounded border border-slate-200 bg-white p-6">
+          <p className="text-slate-700">Artwork Not Found</p>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <main>
-      <h1>{art.title}</h1>
-      <p>{art.description}</p>
-      <p>(This page uses ISR and updates every 60 seconds.)</p>
-    </main>
+    <DashboardLayout title="Art Details">
+      <ArtDetails id={art.id} title={art.title} description={art.description} />
+    </DashboardLayout>
   );
 }
