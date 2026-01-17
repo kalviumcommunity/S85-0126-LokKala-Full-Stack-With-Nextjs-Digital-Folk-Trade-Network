@@ -1,3 +1,6 @@
+import DashboardLayout from '@/app/dashboard-layout';
+import StatCard from '@/components/dashboard/StatCard';
+
 export const dynamic = 'force-dynamic';
 
 type DashboardData = {
@@ -18,11 +21,11 @@ export default async function Dashboard() {
   const data = await getDashboardData();
 
   return (
-    <main>
-      <h1>Dashboard</h1>
-      <p>Orders: {data.orders}</p>
-      <p>Earnings: ${data.earnings}</p>
-      <p>(This page is always rendered on the server for up-to-date info.)</p>
-    </main>
+    <DashboardLayout title="Dashboard">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard title="Total Orders" value={data.orders} />
+        <StatCard title="Total Earnings" value={`$${data.earnings}`} />
+      </div>
+    </DashboardLayout>
   );
 }
