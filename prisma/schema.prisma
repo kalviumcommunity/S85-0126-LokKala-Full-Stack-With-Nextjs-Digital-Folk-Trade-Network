@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  artifacts Artifact[]
+  orders    Order[]
+  reviews   Review[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artifacts Artifact[]
+}
+
+model Artifact {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Decimal
+  stock       Int
+  imageUrl    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sellerId    Int
+  categoryId  Int
+
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  reviews     Review[]
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  totalAmount Decimal
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id         Int   @id @default(autoincrement())
+  quantity   Int
+  price      Decimal
+
+  orderId    Int
+  artifactId Int
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  artifact   Artifact @relation(fields: [artifactId], references: [id])
+
+}
+
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId     Int
+  artifactId Int
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artifactId])
+}
+enum Role {
+  USER
+  ARTIST
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
