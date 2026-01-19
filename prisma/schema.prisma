@@ -11,9 +11,10 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  password  String
+  passwordHash String
   role      Role     @default(USER)
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   artifacts Artifact[]
   orders    Order[]
@@ -31,10 +32,11 @@ model Artifact {
   id          Int      @id @default(autoincrement())
   title       String
   description String
-  price       Float
+  price       Decimal
   stock       Int
   imageUrl    String
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   sellerId    Int
   categoryId  Int
@@ -47,19 +49,20 @@ model Artifact {
 
 model Order {
   id          Int         @id @default(autoincrement())
-  totalAmount Float
+  totalAmount Decimal
   status      OrderStatus @default(PENDING)
   createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
 
   userId      Int
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items       OrderItem[]
 }
 
 model OrderItem {
   id         Int   @id @default(autoincrement())
   quantity   Int
-  price      Float
+  price      Decimal
 
   orderId    Int
   artifactId Int
@@ -75,6 +78,7 @@ model Review {
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 
   userId     Int
   artifactId Int
