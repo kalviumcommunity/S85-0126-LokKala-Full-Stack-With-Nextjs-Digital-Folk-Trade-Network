@@ -8,13 +8,13 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
   passwordHash String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   artifacts Artifact[]
   orders    Order[]
@@ -22,8 +22,10 @@ model User {
 }
 
 model Category {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   artifacts Artifact[]
 }
@@ -36,7 +38,7 @@ model Artifact {
   stock       Int
   imageUrl    String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  updatedAt   DateTime @updatedAt
 
   sellerId    Int
   categoryId  Int
@@ -52,7 +54,7 @@ model Order {
   totalAmount Decimal
   status      OrderStatus @default(PENDING)
   createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @default(now()) @updatedAt
+  updatedAt   DateTime    @updatedAt
 
   userId      Int
   user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -78,13 +80,13 @@ model Review {
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
   userId     Int
   artifactId Int
 
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  artifact   Artifact @relation(fields: [artifactId], references: [id])
+  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 
   @@unique([userId, artifactId])
 }
