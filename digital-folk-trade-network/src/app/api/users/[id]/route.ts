@@ -1,60 +1,27 @@
-import { NextResponse } from 'next/server';
+import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 
-let users = [
-  { id: 1, name: 'Alice' },
-  { id: 2, name: 'Bob' }
-];
+// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
 
-// GET user by ID
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const user = users.find(u => u.id === Number(params.id));
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
 
-  if (!user) {
-    return NextResponse.json(
-      { error: 'User not found' },
-      { status: 404 }
-    );
+    // Example: Replace with actual user lookup logic
+    // const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+    // if (!user) {
+    //   return sendError("User not found", ERROR_CODES.NOT_FOUND, 404);
+    // }
+    // return sendSuccess(user, "User found");
+
+    // Demo logic
+    if (id === "1") {
+      return sendSuccess({ id: 1, name: "Alice" }, "User found");
+    } else if (id === "2") {
+      return sendSuccess({ id: 2, name: "Bob" }, "User found");
+    } else {
+      return sendError("User not found", ERROR_CODES.NOT_FOUND, 404);
+    }
+  } catch (err) {
+    return sendError("Failed to fetch user", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
-
-  return NextResponse.json(user);
-}
-
-// PUT update user
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const body = await req.json();
-  const user = users.find(u => u.id === Number(params.id));
-
-  if (!user) {
-    return NextResponse.json(
-      { error: 'User not found' },
-      { status: 404 }
-    );
-  }
-
-  user.name = body.name || user.name;
-  return NextResponse.json(user);
-}
-
-// DELETE user
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const index = users.findIndex(u => u.id === Number(params.id));
-
-  if (index === -1) {
-    return NextResponse.json(
-      { error: 'User not found' },
-      { status: 404 }
-    );
-  }
-
-  users.splice(index, 1);
-  return NextResponse.json({ message: 'User deleted' });
 }

@@ -1,39 +1,17 @@
-import { NextResponse } from 'next/server';
+import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 
-let users = [
-  { id: 1, name: 'Alice' },
-  { id: 2, name: 'Bob' }
-];
+// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
 
-// GET all users (with pagination)
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const page = Number(searchParams.get('page')) || 1;
-  const limit = Number(searchParams.get('limit')) || 10;
-
-  const start = (page - 1) * limit;
-  const paginatedUsers = users.slice(start, start + limit);
-
-  return NextResponse.json({
-    page,
-    limit,
-    data: paginatedUsers
-  });
-}
-
-// POST create user
-export async function POST(req: Request) {
-  const body = await req.json();
-
-  if (!body.name) {
-    return NextResponse.json(
-      { error: 'Name is required' },
-      { status: 400 }
-    );
+export async function GET() {
+  try {
+    // Example: Replace with actual user fetching logic
+    // const users = await prisma.user.findMany();
+    const users = [
+      { id: 1, name: "Alice" },
+      { id: 2, name: "Bob" }
+    ];
+    return sendSuccess(users, "Users fetched successfully");
+  } catch (err) {
+    return sendError("Failed to fetch users", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
-
-  const newUser = { id: Date.now(), name: body.name };
-  users.push(newUser);
-
-  return NextResponse.json(newUser, { status: 201 });
 }

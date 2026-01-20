@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-
+import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -11,16 +10,18 @@ export async function GET() {
       prisma.review.count(),
     ]);
 
-    return NextResponse.json({
-      status: 'ok',
-      totals: { users, artifacts, orders, reviews },
-      timestamp: new Date().toISOString(),
-    });
+    const data = {
+      totals: { users, artifacts, orders, reviews }
+    };
+
+    return sendSuccess(data, "Prisma health check successful");
   } catch (error) {
     console.error('Prisma health check failed', error);
-    return NextResponse.json(
-      { status: 'error', message: 'Prisma health check failed' },
-      { status: 500 },
+    return sendError(
+      "Prisma health check failed",
+      ERROR_CODES.DATABASE_FAILURE,
+      500,
+      error
     );
   }
 }
