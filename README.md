@@ -63,10 +63,6 @@ Overall, this process improves code quality, team communication, and project rel
 
 ---
 
-### Example PR Screenshot
-_Add a screenshot of a real PR showing review and checks passing here:_
-
-![Example PR with checks and review](<your-screenshot-path-or-link-here>)
 
 ---
 
@@ -78,3 +74,66 @@ _Add a screenshot of a real PR showing review and checks passing here:_
 - [x] Screenshot(s) of a PR with review/checks
 
 ---
+
+Docker & Compose Setup for Local Development
+Dockerfile
+
+The Dockerfile defines how the Next.js application is containerized. It installs dependencies, builds the application, and runs it inside a Node.js container.
+
+Docker Compose
+
+Docker Compose is used to run the full application stack locally, including:
+
+App: Next.js application
+
+Database: PostgreSQL for persistent data storage
+
+Cache: Redis for caching and fast data access
+
+All services run inside a shared Docker network to allow seamless communication.
+
+Networks & Volumes
+
+A custom bridge network is used so services can communicate using service names. A Docker volume is configured for PostgreSQL to persist data across container restarts.
+
+
+Reflection
+
+Setting up Docker Compose helped eliminate environment inconsistencies. Initial challenges included port conflicts and build time, which were resolved by adjusting ports and caching dependencies. This setup ensures the app runs consistently across all team members’ machines.
+
+
+RESTful API Design & Routing
+API Route Hierarchy
+/api/users
+/api/users/[id]
+/api/projects
+/api/tasks
+
+HTTP Methods
+
+GET /api/users → Fetch users (paginated)
+
+POST /api/users → Create user
+
+GET /api/users/:id → Fetch single user
+
+PUT /api/users/:id → Update user
+
+DELETE /api/users/:id → Delete user
+
+Sample Request
+curl -X POST http://localhost:3000/api/users \
+-H "Content-Type: application/json" \
+-d '{"name":"Charlie"}'
+
+Error Handling
+
+400 → Invalid input
+
+404 → Resource not found
+
+201 → Resource created
+
+Reflection
+
+Using consistent, RESTful naming made the API predictable and easier to understand. File-based routing in Next.js simplifies endpoint creation and improves maintainability as the project grows.
