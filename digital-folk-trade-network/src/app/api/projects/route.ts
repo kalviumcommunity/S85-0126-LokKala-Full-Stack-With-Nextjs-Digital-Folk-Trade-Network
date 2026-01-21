@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 
 export async function GET() {
-  return NextResponse.json([
-    { id: 1, title: 'Project Alpha' },
-    { id: 2, title: 'Project Beta' }
-  ]);
+  try {
+    // Example: Replace with actual project fetching logic
+    const projects = [{ id: 1, name: "Project A" }, { id: 2, name: "Project B" }];
+    return sendSuccess(projects, "Projects fetched successfully");
+  } catch (err) {
+    return sendError("Failed to fetch projects", ERROR_CODES.INTERNAL_ERROR, 500, err);
+  }
 }
