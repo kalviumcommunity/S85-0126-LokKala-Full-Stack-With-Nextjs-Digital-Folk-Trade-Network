@@ -132,7 +132,24 @@ Error Handling
 
 404 → Resource not found
 
-201 → Resource created
+201 → Resource created 
+
+## Input Validation with Zod
+
+- All POST/PUT requests are validated using Zod schemas in `src/lib/schemas/`.
+- Example schema: `userSchema` (see [src/lib/schemas/userSchema.ts](src/lib/schemas/userSchema.ts))
+- Example error response:
+  ```json
+  {
+    "success": false,
+    "message": "Validation Error",
+    "errors": [
+      { "field": "name", "message": "Name must be at least 2 characters long" },
+      { "field": "email", "message": "Invalid email address" }
+    ]
+  }
+  ```
+- Schemas are reused on both client and server for consistency.
 
 Reflection
 
