@@ -20,8 +20,8 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: localpassword
+      POSTGRES_DB: digital_folk_trade
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:

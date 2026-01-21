@@ -36,6 +36,9 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5"
   },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix",

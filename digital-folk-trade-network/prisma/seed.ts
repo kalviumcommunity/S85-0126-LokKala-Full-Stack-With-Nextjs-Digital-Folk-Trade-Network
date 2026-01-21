@@ -1,4 +1,4 @@
-const { PrismaClient, Prisma, OrderStatus, Role } = require("@prisma/client");
+import { OrderStatus, Prisma, PrismaClient, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -45,7 +45,7 @@ async function main() {
     },
   ];
 
-  await prisma.user.createMany({ data: users, skipDuplicates: true });
+  await prisma.user.createMany({ data: users });
   const userByEmail = Object.fromEntries(
     (await prisma.user.findMany()).map((user) => [user.email, user.id]),
   );
