@@ -47,3 +47,10 @@ Prisma is configured as the type-safe data layer for this Next.js app backed by 
 ## Notes for the demo
 - Show the schema file, the singleton, a `npx prisma generate` run, and the `/api/prisma-check` response in the terminal.
 - Reflection prompt: Prisma’s generated queries bring type safety, reduced boilerplate, and safer relations; raw SQL can still be preferable for complex hand-tuned queries or DB-specific features.
+
+## Transaction & query optimisation
+- Transaction workflow: POST `/api/orders` creates an order, inserts order items, and decrements inventory inside a single `$transaction`. Pass `simulateFailure: true` in the payload to force a rollback and verify that no partial writes occur.
+- Query shape: GET `/api/orders?page=1&pageSize=10` returns a paginated, select-only projection (order meta, user summary, and lightweight item data) to avoid over-fetching.
+- Indexes added in [prisma/schema.prisma](prisma/schema.prisma): `User.createdAt`, `Artifact.categoryId`, `Artifact.sellerId+createdAt`, `Order.userId`, `Order.status`, `Order.createdAt`, `Order.userId+status`, `Review.artifactId`, `Review.userId`. Generate and apply with `npx prisma migrate dev --name add_indexes_for_optimisation`.
+- Benchmarking: run `DEBUG="prisma:query" npm run dev`, call the same GET `/api/orders` before and after the index migration, and compare timings/plan output (use `EXPLAIN` if you have DB access). Capture logs/screenshots for evidence.
+- Anti-patterns avoided: N+1 (batch fetch via relations in a single query), full-table scans on frequent filters (indexes), and over-fetching (explicit `select` plus pagination). In production, monitor Postgres query duration, lock wait time, and error rate; add alerting on slow queries and use Prisma query logging in lower environments.
