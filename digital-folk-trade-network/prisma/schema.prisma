@@ -8,15 +8,14 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   name         String
-  email        String   @unique
+  email        String @unique
   passwordHash String
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         Role   @default(USER)
 
-  artifacts Artifact[]
+  // 🔁 Reverse relations (REQUIRED)
+  artifacts Artifact[] @relation("UserArtifacts")
   orders    Order[]
   reviews   Review[]
 
@@ -42,9 +41,10 @@ model Artifact {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  sellerId    Int
-  categoryId  Int
+  sellerId   Int
+  categoryId Int
 
+  Transaction_and_Query_Optimisation
   seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   category    Category @relation(fields: [categoryId], references: [id])
   orderItems  OrderItem[]
@@ -52,6 +52,12 @@ model Artifact {
 
   @@index([categoryId])
   @@index([sellerId, createdAt])
+=======
+  seller     User        @relation("UserArtifacts", fields: [sellerId], references: [id], onDelete: Cascade)
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+ main
 }
 
 model Order {
@@ -61,6 +67,7 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  Transaction_and_Query_Optimisation
   userId      Int
   user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items       OrderItem[]
@@ -68,38 +75,42 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([userId, status])
+=======
+  userId Int
+  user   User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items  OrderItem[]
+ main
 }
 
 model OrderItem {
-  id         Int   @id @default(autoincrement())
-  quantity   Int
-  price      Decimal
+  id       Int     @id @default(autoincrement())
+  quantity Int
+  price    Decimal
 
   orderId    Int
   artifactId Int
 
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  artifact   Artifact @relation(fields: [artifactId], references: [id])
-
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  artifact Artifact @relation(fields: [artifactId], references: [id])
 }
 
-
 model Review {
-  id         Int      @id @default(autoincrement())
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   userId     Int
   artifactId Int
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  artifact   Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artifact Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 
   @@unique([userId, artifactId])
   @@index([artifactId])
 }
+
 enum Role {
   USER
   ARTIST

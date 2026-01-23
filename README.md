@@ -154,3 +154,28 @@ Error Handling
 Reflection
 
 Using consistent, RESTful naming made the API predictable and easier to understand. File-based routing in Next.js simplifies endpoint creation and improves maintainability as the project grows.
+
+
+
+## Authentication APIs (Signup / Login)
+
+### Signup
+- Checks existing user in database
+- Hashes password using bcrypt
+- Stores user securely
+
+### Login
+- Verifies password
+- Issues JWT with 1-hour expiry
+
+### Protected Routes
+- Requires valid JWT
+- Rejects invalid or expired tokens
+
+### Security Notes
+- Passwords are never stored in plain text
+- JWT is signed using a secret key
+- Tokens expire automatically
+
+### Reflection
+Implementing authentication with bcrypt and JWT reinforced the importance of security-first backend design. Using Prisma ensured clean database access while keeping the API scalable.
