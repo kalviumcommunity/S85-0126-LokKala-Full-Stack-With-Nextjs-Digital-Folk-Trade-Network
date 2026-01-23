@@ -18,6 +18,8 @@ model User {
   artifacts Artifact[] @relation("UserArtifacts")
   orders    Order[]
   reviews   Review[]
+
+  @@index([createdAt])
 }
 
 model Category {
@@ -42,10 +44,20 @@ model Artifact {
   sellerId   Int
   categoryId Int
 
+  Transaction_and_Query_Optimisation
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  reviews     Review[]
+
+  @@index([categoryId])
+  @@index([sellerId, createdAt])
+=======
   seller     User        @relation("UserArtifacts", fields: [sellerId], references: [id], onDelete: Cascade)
   category   Category    @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
   reviews    Review[]
+ main
 }
 
 model Order {
@@ -55,9 +67,19 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  Transaction_and_Query_Optimisation
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items       OrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId, status])
+=======
   userId Int
   user   User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items  OrderItem[]
+ main
 }
 
 model OrderItem {
@@ -86,6 +108,7 @@ model Review {
   artifact Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
 
   @@unique([userId, artifactId])
+  @@index([artifactId])
 }
 
 enum Role {

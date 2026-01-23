@@ -47,3 +47,34 @@ Prisma is configured as the type-safe data layer for this Next.js app backed by 
 ## Notes for the demo
 - Show the schema file, the singleton, a `npx prisma generate` run, and the `/api/prisma-check` response in the terminal.
 - Reflection prompt: Prisma’s generated queries bring type safety, reduced boilerplate, and safer relations; raw SQL can still be preferable for complex hand-tuned queries or DB-specific features.
+
+## Transaction & query optimisation
+- Transaction workflow: POST `/api/orders` creates an order, inserts order items, and decrements inventory inside a single `$transaction`. Pass `simulateFailure: true` in the payload to force a rollback and verify that no partial writes occur.
+- Query shape: GET `/api/orders?page=1&pageSize=10` returns a paginated, select-only projection (order meta, user summary, and lightweight item data) to avoid over-fetching.
+- Indexes added in [prisma/schema.prisma](prisma/schema.prisma): `User.createdAt`, `Artifact.categoryId`, `Artifact.sellerId+createdAt`, `Order.status`, `Order.createdAt`, `Order.userId+status`, `Review.artifactId` (the unique constraint on `userId+artifactId` covers `userId`). Generate and apply with `npx prisma migrate dev --name add_indexes_for_optimisation`.
+- Benchmarking: run `DEBUG="prisma:query" npm run dev`, call the same GET `/api/orders` before and after the index migration, and compare timings/plan output (use `EXPLAIN` if you have DB access). Capture logs/screenshots for evidence.
+- Anti-patterns avoided: N+1 (batch fetch via relations in a single query), full-table scans on frequent filters (indexes), and over-fetching (explicit `select` plus pagination). In production, monitor Postgres query duration, lock wait time, and error rate; add alerting on slow queries and use Prisma query logging in lower environments.
+
+## REST API structure
+- Hierarchy lives under `src/app/api` using Next.js file-based routing with plural resource folders.
+- Collections: `GET` (paginated, filterable) and `POST` for creation at `/api/users`, `/api/tasks`, `/api/projects`.
+- Single resources: `GET`, `PUT`, `DELETE` at `/api/users/:id`, `/api/tasks/:id`, `/api/projects/:id`.
+- Pagination query params: `page` (default 1), `limit` (default 10). Filters: `search` across name/title/owner and optional `status` for tasks/projects.
+
+### Sample requests
+- List users (page 2, 5 per page): `curl "http://localhost:3000/api/users?page=2&limit=5"`
+- Filter tasks by status: `curl "http://localhost:3000/api/tasks?status=in-progress"`
+- Create user: `curl -X POST http://localhost:3000/api/users -H "Content-Type: application/json" -d '{"name":"Charlie","email":"charlie@example.com","age":25}'`
+- Get single project: `curl http://localhost:3000/api/projects/1`
+- Update task: `curl -X PUT http://localhost:3000/api/tasks/2 -H "Content-Type: application/json" -d '{"status":"done"}'`
+- Delete user: `curl -X DELETE http://localhost:3000/api/users/3`
+
+### Response conventions
+- Success shape: `{ success: true, message, data, timestamp, pagination? }`.
+- Error shape: `{ success: false, message, error: { code, details }, timestamp }`.
+- Common codes: `E400` bad request/validation, `E002` not found, `E500` internal. Invalid pagination returns `400`; missing fields return `400`; not found returns `404`.
+
+### Why the naming matters
+- Consistent plural nouns and mirrored verbs keep the client mental model simple and speed up frontend integration.
+- Predictable pagination and query params allow reusable frontend data hooks and SDK functions.
+- File-based structure under `app/api` makes ownership clear per entity and keeps maintenance scoped as the project grows.
