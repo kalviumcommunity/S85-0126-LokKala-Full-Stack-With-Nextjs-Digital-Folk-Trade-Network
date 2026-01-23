@@ -1,18 +1,66 @@
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
+import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { userSchema } from "@/lib/schemas/userSchema";
+import { NextRequest } from "next/server";
 import { ZodError } from "zod";
 
-// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
+// import { prisma } from "@/lib/prisma"; // Uncomment when wiring to your DB
 
-export async function GET() {
+const mockUsers = [
+  { id: 1, name: "Alice", email: "alice@example.com", age: 29 },
+  { id: 2, name: "Bob", email: "bob@example.com", age: 32 },
+  { id: 3, name: "Charlie", email: "charlie@example.com", age: 24 },
+  { id: 4, name: "Diana", email: "diana@example.com", age: 28 },
+];
+
+const parsePagination = (req: NextRequest) => {
+  const { searchParams } = new URL(req.url);
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+
+  if (page < 1 || limit < 1) {
+    return { error: "page and limit must be positive integers" };
+  }
+
+  return { page, limit, searchParams };
+};
+
+export async function GET(req: NextRequest) {
   try {
-    // Example: Replace with actual user fetching logic
-    // const users = await prisma.user.findMany();
-    const users = [
-      { id: 1, name: "Alice" },
-      { id: 2, name: "Bob" }
-    ];
-    return sendSuccess(users, "Users fetched successfully");
+    const pagination = parsePagination(req);
+    if ("error" in pagination) {
+      return sendError(
+        "Invalid pagination parameters",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        pagination.error
+      );
+    }
+
+    const { page, limit, searchParams } = pagination;
+    const search = searchParams.get("search")?.toLowerCase();
+
+    const filteredUsers = search
+      ? mockUsers.filter((user) =>
+          `${user.name} ${user.email}`.toLowerCase().includes(search)
+        )
+      : mockUsers;
+
+    const total = filteredUsers.length;
+    const start = (page - 1) * limit;
+    const data = filteredUsers.slice(start, start + limit);
+
+    return sendSuccess(
+      {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit) || 1,
+        },
+      },
+      "Users fetched successfully"
+    );
   } catch (err) {
     return sendError("Failed to fetch users", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
@@ -23,10 +71,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = userSchema.parse(body);
 
-    // TODO: Insert user creation logic here (e.g., save to DB)
-    // const user = await prisma.user.create({ data });
+    // TODO: Replace mock logic with DB persistence (e.g., prisma.user.create)
+    const createdUser = { id: mockUsers.length + 1, ...data };
 
-    return sendSuccess(data, "User created successfully", 201);
+    return sendSuccess(createdUser, "User created successfully", 201);
   } catch (error) {
     if (error instanceof ZodError) {
       return sendError(

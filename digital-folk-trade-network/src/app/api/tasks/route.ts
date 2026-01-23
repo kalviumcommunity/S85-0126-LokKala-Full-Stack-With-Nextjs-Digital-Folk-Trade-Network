@@ -1,22 +1,62 @@
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
-// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
+import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { NextRequest } from "next/server";
+// import { prisma } from "@/lib/prisma"; // Uncomment when wiring to your DB
 
-export async function GET() {
+const mockTasks = [
+  { id: 1, title: "Sketch landing page", status: "todo", assignee: "Alice" },
+  { id: 2, title: "Refine artifact listing", status: "in-progress", assignee: "Bob" },
+  { id: 3, title: "QA purchase flow", status: "done", assignee: "Charlie" },
+];
+
+const parsePagination = (req: NextRequest) => {
+  const { searchParams } = new URL(req.url);
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
+
+  if (page < 1 || limit < 1) {
+    return { error: "page and limit must be positive integers" };
+  }
+
+  return { page, limit, searchParams };
+};
+
+export async function GET(req: NextRequest) {
   try {
-    // Example: Replace with actual task fetching logic
-    // const tasks = await prisma.task.findMany();
-    const tasks = [
-      { id: 1, title: "Sample Task 1" },
-      { id: 2, title: "Sample Task 2" }
-    ];
-    return sendSuccess(tasks, "Tasks fetched successfully");
-  } catch (err) {
-    return sendError(
-      "Failed to fetch tasks",
-      ERROR_CODES.INTERNAL_ERROR,
-      500,
-      err
+    const pagination = parsePagination(req);
+    if ("error" in pagination) {
+      return sendError("Invalid pagination parameters", ERROR_CODES.BAD_REQUEST, 400, pagination.error);
+    }
+
+    const { page, limit, searchParams } = pagination;
+    const search = searchParams.get("search")?.toLowerCase();
+    const status = searchParams.get("status")?.toLowerCase();
+
+    const filteredTasks = mockTasks.filter((task) => {
+      const matchesStatus = status ? task.status.toLowerCase() === status : true;
+      const matchesSearch = search
+        ? `${task.title} ${task.assignee}`.toLowerCase().includes(search)
+        : true;
+      return matchesStatus && matchesSearch;
+    });
+
+    const total = filteredTasks.length;
+    const start = (page - 1) * limit;
+    const data = filteredTasks.slice(start, start + limit);
+
+    return sendSuccess(
+      {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit) || 1,
+        },
+      },
+      "Tasks fetched successfully"
     );
+  } catch (err) {
+    return sendError("Failed to fetch tasks", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
 }
 
@@ -25,25 +65,19 @@ export async function POST(req: Request) {
     const data = await req.json();
 
     if (!data.title) {
-      return sendError(
-        "Missing required field: title",
-        ERROR_CODES.VALIDATION_ERROR,
-        400
-      );
+      return sendError("Missing required field: title", ERROR_CODES.VALIDATION_ERROR, 400);
     }
 
-    // Example: Replace with actual task creation logic
-    // const newTask = await prisma.task.create({ data });
-    // return sendSuccess(newTask, "Task created successfully", 201);
+    const newTask = {
+      id: mockTasks.length + 1,
+      status: data.status || "todo",
+      assignee: data.assignee || "unassigned",
+      ...data,
+    };
 
-    // For demonstration, just echo the data
-    return sendSuccess(data, "Task created successfully", 201);
+    // TODO: Replace mock logic with DB persistence (e.g., prisma.task.create)
+    return sendSuccess(newTask, "Task created successfully", 201);
   } catch (err) {
-    return sendError(
-      "Internal Server Error",
-      ERROR_CODES.INTERNAL_ERROR,
-      500,
-      err
-    );
+    return sendError("Internal Server Error", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
 }
