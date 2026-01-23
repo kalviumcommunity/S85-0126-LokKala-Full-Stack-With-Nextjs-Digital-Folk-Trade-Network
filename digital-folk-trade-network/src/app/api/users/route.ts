@@ -1,44 +1,31 @@
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
-import { userSchema } from "@/lib/schemas/userSchema";
-import { ZodError } from "zod";
+import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
-// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
+const JWT_SECRET = process.env.JWT_SECRET!;
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Example: Replace with actual user fetching logic
-    // const users = await prisma.user.findMany();
-    const users = [
-      { id: 1, name: "Alice" },
-      { id: 2, name: "Bob" }
-    ];
-    return sendSuccess(users, "Users fetched successfully");
-  } catch (err) {
-    return sendError("Failed to fetch users", ERROR_CODES.INTERNAL_ERROR, 500, err);
-  }
-}
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.split(" ")[1];
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const data = userSchema.parse(body);
-
-    // TODO: Insert user creation logic here (e.g., save to DB)
-    // const user = await prisma.user.create({ data });
-
-    return sendSuccess(data, "User created successfully", 201);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return sendError(
-        "Validation Error",
-        ERROR_CODES.BAD_REQUEST,
-        400,
-        error.issues.map((e) => ({
-          field: e.path[0],
-          message: e.message,
-        }))
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "Token missing" },
+        { status: 401 }
       );
     }
-    return sendError("Unexpected error", ERROR_CODES.INTERNAL_ERROR, 500, error);
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    return NextResponse.json({
+      success: true,
+      message: "Protected route accessed",
+      user: decoded,
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, message: "Invalid or expired token" },
+      { status: 403 }
+    );
   }
 }
