@@ -175,7 +175,33 @@ Using consistent, RESTful naming made the API predictable and easier to understa
 ### Security Notes
 - Passwords are never stored in plain text
 - JWT is signed using a secret key
-- Tokens expire automatically
+- Tokens expire automatically 
+
+## Centralized Error Handling & Structured Logging
+
+- All error-prone API routes use a reusable error handler (`src/lib/errorHandler.ts`) for consistent error responses.
+- Errors are logged in structured JSON format via a simple logger (`src/lib/logger.ts`), making debugging and monitoring easier.
+- In development, error responses include stack traces; in production, only a safe message is shown to users.
+- Sensitive details are never exposed in production, improving user trust and security.
+- This system is easily extendable to third-party logging tools or cloud services.
+
+**Sample Error Response (Production):**
+```json
+{
+  "success": false,
+  "message": "Something went wrong. Please try again later."
+}
+```
+
+**Sample Log Output:**
+```json
+{
+  "level": "error",
+  "message": "Error in GET /api/users",
+  "meta": { "message": "Database connection failed!", "stack": "REDACTED" },
+  "timestamp": "2026-01-24T12:45:00Z"
+}
+```
 
 ### Reflection
 Implementing authentication with bcrypt and JWT reinforced the importance of security-first backend design. Using Prisma ensured clean database access while keeping the API scalable.
