@@ -179,3 +179,23 @@ Using consistent, RESTful naming made the API predictable and easier to understa
 
 ### Reflection
 Implementing authentication with bcrypt and JWT reinforced the importance of security-first backend design. Using Prisma ensured clean database access while keeping the API scalable.
+
+
+
+## File Upload API using Pre-Signed URLs (AWS S3)
+
+### Upload Flow
+1. Client requests a pre-signed URL from backend
+2. Backend generates a short-lived URL using AWS SDK
+3. Client uploads file directly to S3
+4. File metadata is stored in the database
+
+### Security Measures
+- AWS credentials never exposed
+- Short URL expiry (60 seconds)
+- File type validation
+- Private bucket access
+
+
+### Reflection
+Using pre-signed URLs improves scalability and security by removing file handling from the backend. Lifecycle policies and short-lived URLs reduce risk and storage cost.
