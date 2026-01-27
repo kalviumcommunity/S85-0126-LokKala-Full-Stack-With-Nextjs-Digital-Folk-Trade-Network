@@ -14,12 +14,10 @@ model User {
   passwordHash String
   role         Role   @default(USER)
 
-  // 🔁 Reverse relations (REQUIRED)
+  // Reverse relations
   artifacts Artifact[] @relation("UserArtifacts")
   orders    Order[]
   reviews   Review[]
-
-  @@index([createdAt])
 }
 
 model Category {
@@ -44,20 +42,13 @@ model Artifact {
   sellerId   Int
   categoryId Int
 
-  Transaction_and_Query_Optimisation
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category    Category @relation(fields: [categoryId], references: [id])
-  orderItems  OrderItem[]
-  reviews     Review[]
-
-  @@index([categoryId])
-  @@index([sellerId, createdAt])
-=======
   seller     User        @relation("UserArtifacts", fields: [sellerId], references: [id], onDelete: Cascade)
   category   Category    @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
   reviews    Review[]
- main
+
+  @@index([categoryId])
+  @@index([sellerId, createdAt])
 }
 
 model Order {
@@ -67,19 +58,13 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  Transaction_and_Query_Optimisation
-  userId      Int
-  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  items       OrderItem[]
+  userId Int
+  user   User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items  OrderItem[]
 
   @@index([status])
   @@index([createdAt])
   @@index([userId, status])
-=======
-  userId Int
-  user   User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  items  OrderItem[]
- main
 }
 
 model OrderItem {
@@ -109,6 +94,13 @@ model Review {
 
   @@unique([userId, artifactId])
   @@index([artifactId])
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  createdAt DateTime @default(now())
 }
 
 enum Role {
