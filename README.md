@@ -220,7 +220,76 @@ Implementing authentication with bcrypt and JWT reinforced the importance of sec
 - AWS credentials never exposed
 - Short URL expiry (60 seconds)
 - File type validation
-- Private bucket access
+- Private bucket access 
+
+---
+
+## App Router: Public & Protected Pages, Dynamic Routing, and Middleware
+
+### Route Map
+
+| Route                | Type       | Description                        |
+|----------------------|------------|------------------------------------|
+| `/`                  | Public     | Home page                          |
+| `/login`             | Public     | Login page                         |
+| `/dashboard`         | Protected  | User dashboard (requires auth)     |
+| `/users`             | Protected  | User list (requires auth)          |
+| `/users/[id]`        | Protected  | User profile (dynamic, requires auth) |
+| `/not-found`         | Public     | Custom 404 page                    |
+| `/api/admin/*`       | Protected  | Admin API (requires admin role)    |
+| `/api/users/*`       | Protected  | User API (requires auth)           |
+
+---
+
+### Middleware
+
+- **API Protection:**  
+  - `/api/admin/*` requires a valid JWT in the `Authorization` header and checks for admin role.
+  - `/api/users/*` requires a valid JWT in the `Authorization` header.
+- **Page Protection:**  
+  - `/dashboard` and `/users` (including `/users/[id]`) require a valid JWT in the `token` cookie.
+  - Unauthenticated users are redirected to `/login`.
+
+**See:** `src/app/middleware.ts`
+
+---
+
+### Dynamic Route Example
+
+**File:** `src/app/users/[id]/page.tsx`
+
+Renders a user profile page based on the URL parameter.
+
+---
+
+### Navigation & Layout
+
+- Navigation links for Home, Login, Dashboard, and User 1 are included in the layout.
+- Breadcrumbs are present on dynamic user pages for better navigation and SEO.
+
+**See:** `src/app/layout.tsx`
+
+---
+
+### Custom 404 Page
+
+A user-friendly 404 page is shown for unknown routes.
+
+**See:** `src/app/not-found.tsx`
+
+---
+
+### Reflection
+
+- **SEO:**  
+  Next.js App Router enables server-side rendering and dynamic metadata, improving SEO for both static and dynamic routes.
+- **Breadcrumbs:**  
+  Breadcrumbs on dynamic pages help users and search engines understand site structure, improving navigation and SEO.
+- **Error Handling:**  
+  Custom 404 and error boundaries provide a better user experience and easier recovery from navigation errors.
+
+---
+
 
 
 ### Reflection
