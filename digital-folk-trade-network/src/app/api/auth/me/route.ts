@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { requireAuthPayload } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 export async function GET(req: Request) {

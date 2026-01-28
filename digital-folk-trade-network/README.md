@@ -36,6 +36,43 @@ curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/orders?page=1
 - CSRF: SameSite cookies plus the ability to pair with Origin/Referer checks on sensitive routes. Refresh token is Strict to block cross-site refresh attempts.
 - Replay: short-lived access tokens plus refresh rotation via `refreshTokenVersion` narrows the usable window of stolen tokens. Consider IP/device binding for stricter setups.
 
+## Role-based access control (RBAC)
+- Policy source: [src/lib/rbac.ts](src/lib/rbac.ts) exports the permission matrix and `checkAccess` logger used by APIs and the dashboard UI.
+- Roles and permissions:
+
+| Role  | Permissions |
+| --- | --- |
+| ADMIN | `*` (all actions) |
+| ARTIST | `orders:read:own`, `orders:write:own`, `tasks:read`, `tasks:write`, `projects:read`, `users:read:own` |
+| USER | `orders:read:own`, `orders:write:own`, `tasks:read`, `projects:read`, `users:read:own` |
+| GUEST | none |
+
+- Enforcement points:
+	- Users API: [src/app/api/users/route.ts](src/app/api/users/route.ts) (list/create) and [src/app/api/users/[id]/route.ts](src/app/api/users/%5Bid%5D/route.ts) (self or admin) require valid access tokens and permissions.
+	- Orders API: [src/app/api/orders/route.ts](src/app/api/orders/route.ts) uses `orders:write` for creation (own vs admin) and `orders:read` for listing (admin only).
+	- Tasks and Projects APIs: [src/app/api/tasks/route.ts](src/app/api/tasks/route.ts) and [src/app/api/projects/route.ts](src/app/api/projects/route.ts) gate read/write according to the matrix.
+	- UI guard: [src/app/dashboard/page.tsx](src/app/dashboard/page.tsx) reads the access token cookie, evaluates permissions, and shows ALLOWED/DENIED badges plus the role’s permission list.
+
+- Audit logging: every `checkAccess` call writes a line like `[RBAC] role=USER permission=orders:read resource=orders decision=DENIED reason=...` so you can screenshot/stream console output for allow/deny evidence.
+
+- Quick allow/deny demo
+	1) Login to get cookies (see JWT section for sample curl). Then:
+	```
+	# Allowed for admin only
+	curl -i -b cookies.txt http://localhost:3000/api/orders
+
+	# Allowed for any signed-in role
+	curl -i -b cookies.txt http://localhost:3000/api/tasks
+
+	# Create task (denied for USER, allowed for ADMIN/ARTIST)
+	curl -i -b cookies.txt -X POST http://localhost:3000/api/tasks \
+		-H "Content-Type: application/json" \
+		-d '{"title":"RBAC demo"}'
+	```
+	Check the server logs for the `[RBAC]` lines showing the allow/deny decisions.
+
+- Scalability and future-proofing: the matrix is centralized for easy edits, permissions are strings so you can introduce more granular actions without code churn, and the audit log trail supports reviews. For policy-based access later, plug in an external PDP or attribute checks while keeping `checkAccess` as the enforcement hook.
+
 ## Setup
 - Install tooling: `npm install --save-dev prisma` and `npm install @prisma/client` (already in `package.json`).
 - Configure your database URL in `.env` (example): `DATABASE_URL="postgresql://username:password@localhost:5432/mydb"`.

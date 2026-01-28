@@ -1,10 +1,30 @@
+import { requireAuthPayload } from "@/lib/auth";
+import { checkAccess } from "@/lib/rbac";
 import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 
 // import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
+
+    const auth = requireAuthPayload(request);
+    if (!auth) {
+      return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
+    const isOwner = auth.sub === Number(id);
+    const decision = checkAccess({
+      role: auth.role,
+      action: "users:read",
+      resource: `users/${id}`,
+      isOwner,
+      reason: isOwner ? "self profile" : undefined,
+    });
+
+    if (!decision.allowed) {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
+    }
 
     // Example: Replace with actual user lookup logic
     // const user = await prisma.user.findUnique({ where: { id: Number(id) } });

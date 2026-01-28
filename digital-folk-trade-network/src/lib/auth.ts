@@ -1,7 +1,7 @@
+import { Role } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { Role } from "@prisma/client";
 import { ENV, isProd } from "./env";
 
 export const ACCESS_TOKEN_COOKIE = "accessToken";
@@ -62,6 +62,13 @@ export function verifyRefreshToken(token: string): TokenPayload | null {
   } catch (error) {
     return null;
   }
+}
+
+export function getAuthPayloadFromCookies(): TokenPayload | null {
+  const cookieStore = cookies();
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!token) return null;
+  return verifyAccessToken(token);
 }
 
 export function attachAuthCookies(response: NextResponse, tokens: TokenPair) {

@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { attachAuthCookies, generateTokenPair } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
