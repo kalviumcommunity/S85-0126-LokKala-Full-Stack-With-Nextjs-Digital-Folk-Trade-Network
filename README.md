@@ -294,3 +294,31 @@ A user-friendly 404 page is shown for unknown routes.
 
 ### Reflection
 Using pre-signed URLs improves scalability and security by removing file handling from the backend. Lifecycle policies and short-lived URLs reduce risk and storage cost.
+
+
+## Email Service Integration (SendGrid)
+
+### Why Transactional Emails
+Transactional emails notify users about important actions like signup and alerts, improving trust and engagement.
+
+### Provider Choice
+SendGrid was chosen for its easy setup, free tier, and API-based integration.
+
+### Email Flow
+1. Client triggers an event (e.g., signup)
+2. Backend calls `/api/email`
+3. SendGrid sends email from verified sender
+
+### Email Template
+Reusable HTML templates are used for personalization and consistency.
+
+
+
+### Security & Reliability
+- API key stored securely in environment variables
+- Verified sender authentication
+- Rate limits handled by provider
+- Bounce and spam monitoring via SendGrid dashboard
+
+### Reflection
+Integrating transactional emails highlighted the importance of reliable communication. Using SendGrid simplified delivery while keeping credentials secure and manageable.
