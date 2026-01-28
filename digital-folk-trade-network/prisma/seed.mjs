@@ -1,6 +1,9 @@
+import bcrypt from "bcryptjs";
 import { OrderStatus, Prisma, PrismaClient, Role } from "@prisma/client";
 
 const prisma = new PrismaClient();
+
+const DEFAULT_PASSWORD = "folkpass123";
 
 async function main() {
   console.log("Resetting seeded data...");
@@ -24,23 +27,25 @@ async function main() {
     (await prisma.category.findMany()).map((category) => [category.name, category.id]),
   );
 
+  const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+
   const users = [
     {
       name: "Aditi Singh",
       email: "aditi@example.com",
-      passwordHash: "hashed-aditi",
+      passwordHash: hashedPassword,
       role: Role.ARTIST,
     },
     {
       name: "Rohan Das",
       email: "rohan@example.com",
-      passwordHash: "hashed-rohan",
+      passwordHash: hashedPassword,
       role: Role.USER,
     },
     {
       name: "Meera Pillai",
       email: "meera@example.com",
-      passwordHash: "hashed-meera",
+      passwordHash: hashedPassword,
       role: Role.USER,
     },
   ];
