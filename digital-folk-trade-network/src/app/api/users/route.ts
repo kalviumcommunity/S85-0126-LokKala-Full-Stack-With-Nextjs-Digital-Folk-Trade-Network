@@ -1,3 +1,4 @@
+ RBAC
 import { requireAuthPayload } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
@@ -11,7 +12,7 @@ const USERS_CACHE_TTL_SECONDS = 60;
 
 export async function GET(req: Request) {
   try {
-    const auth = requireAuthPayload(req);
+    const auth = await requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
@@ -82,18 +83,14 @@ export async function POST(req: Request) {
     console.log(`[Cache] ${USERS_CACHE_KEY} invalidated after POST /api/users`);
 
     return sendSuccess(data, "User created successfully", 201);
+import { handleError } from '@/lib/errorHandler';
+
+export async function GET(req: Request) {
+  try {
+    // Your user logic here
+    return new Response(JSON.stringify({ success: true, message: "User route accessible to all authenticated users." }), { status: 200 });
+ main
   } catch (error) {
-    if (error instanceof ZodError) {
-      return sendError(
-        "Validation Error",
-        ERROR_CODES.BAD_REQUEST,
-        400,
-        error.issues.map((e) => ({
-          field: e.path[0],
-          message: e.message,
-        }))
-      );
-    }
-    return sendError("Unexpected error", ERROR_CODES.INTERNAL_ERROR, 500, error);
+    return handleError(error, { req });
   }
 }

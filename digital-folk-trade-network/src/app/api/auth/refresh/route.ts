@@ -9,7 +9,7 @@ import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 export async function POST() {
   try {
-    const token = getRefreshTokenFromCookies();
+    const token = await getRefreshTokenFromCookies();
     if (!token) {
       return sendError("Refresh token missing", ERROR_CODES.UNAUTHORIZED, 401);
     }

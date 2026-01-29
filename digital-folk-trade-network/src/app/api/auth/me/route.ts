@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 export async function GET(req: Request) {
-  const payload = requireAuthPayload(req);
+  const payload = await requireAuthPayload(req);
   if (!payload) {
     return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
   }
