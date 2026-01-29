@@ -1,3 +1,4 @@
+ RBAC
 import { requireAuthPayload } from "@/lib/auth";
 import { checkAccess } from "@/lib/rbac";
 import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
@@ -44,18 +45,14 @@ export async function POST(req: Request) {
     // const user = await prisma.user.create({ data });
 
     return sendSuccess(data, "User created successfully", 201);
+import { handleError } from '@/lib/errorHandler';
+
+export async function GET(req: Request) {
+  try {
+    // Your user logic here
+    return new Response(JSON.stringify({ success: true, message: "User route accessible to all authenticated users." }), { status: 200 });
+ main
   } catch (error) {
-    if (error instanceof ZodError) {
-      return sendError(
-        "Validation Error",
-        ERROR_CODES.BAD_REQUEST,
-        400,
-        error.issues.map((e) => ({
-          field: e.path[0],
-          message: e.message,
-        }))
-      );
-    }
-    return sendError("Unexpected error", ERROR_CODES.INTERNAL_ERROR, 500, error);
+    return handleError(error, { req });
   }
 }
