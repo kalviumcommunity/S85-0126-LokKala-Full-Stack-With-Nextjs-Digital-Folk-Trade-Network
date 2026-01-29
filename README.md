@@ -289,7 +289,135 @@ A user-friendly 404 page is shown for unknown routes.
   Custom 404 and error boundaries provide a better user experience and easier recovery from navigation errors.
 
 ---
+## Global State Management: Context & Custom Hooks
 
+### Overview
+
+This project uses React Context and custom hooks to manage global state for authentication and UI preferences (theme, sidebar). This approach eliminates prop-drilling, keeps logic modular, and makes state transitions easy to track and optimize.
+
+---
+
+### Folder Structure
+
+```
+src/
+  context/
+    AuthContext.tsx   # Authentication state/context
+    UIContext.tsx     # UI state/context (theme, sidebar)
+  hooks/
+    useAuth.ts        # Custom hook for auth logic
+    useUI.ts          # Custom hook for UI logic
+```
+
+---
+
+### How It Works
+
+- **AuthContext** provides `user`, `login`, and `logout` globally.
+- **UIContext** provides `theme`, `toggleTheme`, `sidebarOpen`, and `toggleSidebar` globally.
+- **Custom hooks** (`useAuth`, `useUI`) encapsulate context access and reusable logic, making component code cleaner.
+
+Both contexts are wrapped at the top level in `src/app/layout.tsx`:
+
+```tsx
+import { AuthProvider } from "@/context/AuthContext";
+import { UIProvider } from "@/context/UIContext";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <AuthProvider>
+          <UIProvider>{children}</UIProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+### Example Usage
+
+In `src/app/page.tsx`:
+
+```tsx
+"use client";
+import { useAuth } from "@/hooks/useAuth";
+import { useUI } from "@/hooks/useUI";
+
+export default function Home() {
+  const { user, login, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme, sidebarOpen, toggleSidebar } = useUI();
+
+  return (
+    <main className={theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-black"}>
+      <h1>State Management with Context & Hooks</h1>
+      <section>
+        <h2>Authentication</h2>
+        {isAuthenticated ? (
+          <>
+            <p>Logged in as: {user}</p>
+            <button onClick={logout}>Logout</button>
+          </>
+        ) : (
+          <button onClick={() => login("KalviumUser")}>Login</button>
+        )}
+      </section>
+      <section>
+        <h2>UI Controls</h2>
+        <p>Current Theme: {theme}</p>
+        <button onClick={toggleTheme}>Toggle Theme</button>
+        <button onClick={toggleSidebar}>
+          {sidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+        </button>
+      </section>
+    </main>
+  );
+}
+```
+
+---
+
+### State Transitions & Console Logs
+
+- **Login:** `User logged in: KalviumUser`
+- **Logout:** `User logged out`
+- **Theme Toggle:** `Theme toggled to dark` / `Theme toggled to light`
+- **Sidebar Toggle:** `Sidebar opened` / `Sidebar closed`
+
+---
+
+### Performance & Scalability
+
+- **No prop-drilling:** Context provides state anywhere in the component tree.
+- **Custom hooks** encapsulate logic, making components simpler and more maintainable.
+- **Memoization/Reducers:** For more complex state, `useReducer` or `React.memo` can be added to optimize performance and prevent unnecessary re-renders.
+
+---
+
+### Reflection
+
+- **Why Context & Hooks?**  
+  They replace complex prop-passing and duplicated state, especially for authentication and UI preferences needed across many pages.
+- **Real-world use case:**  
+  Instead of passing user info and theme state through every layout and page, any component can access or update them directly via hooks.
+- **Performance:**  
+  For simple state, `useState` is sufficient. For larger apps, consider `useReducer` or memoization to avoid unnecessary renders.
+
+---
+
+### Screenshots / Evidence
+
+- Console logs show state transitions (login, logout, theme toggle, sidebar toggle).
+- React DevTools confirms context values update as expected.
+
+---
+
+### Summary
+
+This approach keeps global state management clean, modular, and scalable—improving both developer experience and app maintainability.
 
 
 ### Reflection
