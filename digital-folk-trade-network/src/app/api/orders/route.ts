@@ -18,7 +18,7 @@ const orderPayloadSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const auth = requireAuthPayload(req);
+    const auth = await requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
 
 export async function GET(request: Request) {
   try {
-    const auth = requireAuthPayload(request);
+    const auth = await requireAuthPayload(request);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }

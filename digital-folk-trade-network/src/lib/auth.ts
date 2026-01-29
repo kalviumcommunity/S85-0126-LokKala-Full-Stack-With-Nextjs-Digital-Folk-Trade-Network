@@ -64,8 +64,8 @@ export function verifyRefreshToken(token: string): TokenPayload | null {
   }
 }
 
-export function getAuthPayloadFromCookies(): TokenPayload | null {
-  const cookieStore = cookies();
+export async function getAuthPayloadFromCookies(): Promise<TokenPayload | null> {
+  const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
   if (!token) return null;
   return verifyAccessToken(token);
@@ -111,23 +111,23 @@ export function clearAuthCookies(response: NextResponse) {
   return response;
 }
 
-export function getAccessTokenFromRequest(req: Request): string | null {
+export async function getAccessTokenFromRequest(req: Request): Promise<string | null> {
   const header = req.headers.get("authorization");
   if (header?.startsWith("Bearer ")) {
     return header.slice("Bearer ".length);
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
 }
 
-export function getRefreshTokenFromCookies(): string | null {
-  const cookieStore = cookies();
+export async function getRefreshTokenFromCookies(): Promise<string | null> {
+  const cookieStore = await cookies();
   return cookieStore.get(REFRESH_TOKEN_COOKIE)?.value ?? null;
 }
 
-export function requireAuthPayload(req: Request): TokenPayload | null {
-  const token = getAccessTokenFromRequest(req);
+export async function requireAuthPayload(req: Request): Promise<TokenPayload | null> {
+  const token = await getAccessTokenFromRequest(req);
   if (!token) return null;
   return verifyAccessToken(token);
 }
