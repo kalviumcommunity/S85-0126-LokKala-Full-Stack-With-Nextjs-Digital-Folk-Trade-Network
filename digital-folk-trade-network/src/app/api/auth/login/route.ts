@@ -1,6 +1,9 @@
+ RBAC
 JWT
 import { prisma } from "@/lib/prisma";
+ main
 import { attachAuthCookies, generateTokenPair } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";

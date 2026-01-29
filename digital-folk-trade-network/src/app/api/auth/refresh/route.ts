@@ -1,10 +1,10 @@
-import { prisma } from "@/lib/prisma";
 import {
-  attachAuthCookies,
-  generateTokenPair,
-  getRefreshTokenFromCookies,
-  verifyRefreshToken,
+    attachAuthCookies,
+    generateTokenPair,
+    getRefreshTokenFromCookies,
+    verifyRefreshToken,
 } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 export async function POST() {

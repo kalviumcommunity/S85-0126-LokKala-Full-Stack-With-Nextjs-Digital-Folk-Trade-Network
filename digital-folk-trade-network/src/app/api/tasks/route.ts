@@ -1,8 +1,20 @@
+import { requireAuthPayload } from "@/lib/auth";
+import { checkAccess } from "@/lib/rbac";
 import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 // import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const auth = requireAuthPayload(req);
+    if (!auth) {
+      return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
+    const decision = checkAccess({ role: auth.role, action: "tasks:read", resource: "tasks" });
+    if (!decision.allowed) {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403, { permission: decision.permission });
+    }
+
     // Example: Replace with actual task fetching logic
     // const tasks = await prisma.task.findMany();
     const tasks = [
@@ -22,6 +34,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthPayload(req);
+    if (!auth) {
+      return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
+    const decision = checkAccess({ role: auth.role, action: "tasks:write", resource: "tasks" });
+    if (!decision.allowed) {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403, { permission: decision.permission });
+    }
+
     const data = await req.json();
 
     if (!data.title) {

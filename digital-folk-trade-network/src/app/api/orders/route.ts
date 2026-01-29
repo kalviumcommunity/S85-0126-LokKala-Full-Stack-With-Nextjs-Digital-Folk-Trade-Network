@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { requireAuthPayload } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { checkAccess } from "@/lib/rbac";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { Prisma } from "@prisma/client";
 import { ZodError, z } from "zod";
@@ -25,8 +26,16 @@ export async function POST(req: Request) {
     const payload = orderPayloadSchema.parse(await req.json());
     const { userId, items, simulateFailure } = payload;
 
-    if (auth.sub !== userId && auth.role !== "ADMIN") {
-      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
+    const decision = checkAccess({
+      role: auth.role,
+      action: "orders:write",
+      resource: `orders:user:${userId}`,
+      isOwner: auth.sub === userId,
+      reason: auth.sub === userId ? "own order" : undefined,
+    });
+
+    if (!decision.allowed) {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403, { permission: decision.permission });
     }
     const quantityByArtifact = items.reduce((map, item) => {
       map.set(item.artifactId, (map.get(item.artifactId) ?? 0) + item.quantity);
@@ -136,6 +145,11 @@ export async function GET(request: Request) {
     const auth = requireAuthPayload(request);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
+    const decision = checkAccess({ role: auth.role, action: "orders:read", resource: "orders" });
+    if (!decision.allowed) {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403, { permission: decision.permission });
     }
 
     const { searchParams } = new URL(request.url);
