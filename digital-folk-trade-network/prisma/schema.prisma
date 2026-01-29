@@ -12,7 +12,14 @@ model User {
   name         String
   email        String @unique
   passwordHash String
+ JWT
+  role         Role     @default(USER)
+  refreshTokenVersion Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   role         Role   @default(USER)
+main
 
   // Reverse relations
   artifacts Artifact[] @relation("UserArtifacts")

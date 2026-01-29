@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireAuthPayload } from "@/lib/auth";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { Prisma } from "@prisma/client";
 import { ZodError, z } from "zod";
@@ -16,8 +17,17 @@ const orderPayloadSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const auth = requireAuthPayload(req);
+    if (!auth) {
+      return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
     const payload = orderPayloadSchema.parse(await req.json());
     const { userId, items, simulateFailure } = payload;
+
+    if (auth.sub !== userId && auth.role !== "ADMIN") {
+      return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
+    }
     const quantityByArtifact = items.reduce((map, item) => {
       map.set(item.artifactId, (map.get(item.artifactId) ?? 0) + item.quantity);
       return map;
@@ -123,6 +133,11 @@ export async function POST(req: Request) {
 
 export async function GET(request: Request) {
   try {
+    const auth = requireAuthPayload(request);
+    if (!auth) {
+      return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page")) || 1;
     const pageSize = Number(searchParams.get("pageSize")) || 10;

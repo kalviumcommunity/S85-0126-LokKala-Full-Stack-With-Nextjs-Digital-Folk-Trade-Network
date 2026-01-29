@@ -2,6 +2,40 @@
 
 Prisma is configured as the type-safe data layer for this Next.js app backed by PostgreSQL.
 
+## JWT & session hardening
+- Secrets required: set `DATABASE_URL`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` in `.env` (32+ chars for both secrets). The Zod guard in [src/lib/env.ts](src/lib/env.ts) fails fast if any are missing.
+- Access tokens: 15m lifetime, signed with `JWT_SECRET`, stored as HTTP-only, SameSite=Lax cookies named `accessToken`.
+- Refresh tokens: 7d lifetime, signed with `JWT_REFRESH_SECRET`, stored as HTTP-only, SameSite=Strict cookies named `refreshToken`.
+- Rotation: user field `refreshTokenVersion` in [prisma/schema.prisma](prisma/schema.prisma) increments on each login/refresh so older refresh tokens are rejected.
+- Seed login for demos: any seeded user (e.g., `rohan@example.com`) uses password `folkpass123`. Update seeds in [prisma/seed.mjs](prisma/seed.mjs) if you change it.
+
+### Auth endpoints
+- POST `/api/auth/login`: body `{ email, password }`; issues rotated access + refresh tokens and sets cookies.
+- POST `/api/auth/refresh`: uses the secure refresh cookie, bumps `refreshTokenVersion`, and re-issues both tokens (old refresh invalidated by version mismatch).
+- GET `/api/auth/me`: returns the authenticated user when a valid access token is present (cookie or `Authorization: Bearer <token>`).
+- POST `/api/auth/logout`: clears both cookies.
+- Orders now require auth: POST/GET `/api/orders` expect a valid access token; POST checks that either the caller owns `userId` or has role `ADMIN`.
+
+### Token flow evidence
+- Cookies are HttpOnly to keep tokens out of JavaScript (mitigates XSS token theft). Refresh uses SameSite=Strict to blunt CSRF; access uses Lax for same-site form/fetch usability.
+- Rotation proof: the refresh response returns `rotatedFromVersion` and `newRefreshTokenVersion`, and the DB column changes on each refresh/login.
+- Expiry handling: when the access token expires, call `/api/auth/refresh` to obtain a fresh pair; clients should retry the original request after refresh.
+
+### Quick curl script
+```
+curl -i -c cookies.txt -b cookies.txt -X POST http://localhost:3000/api/auth/login \
+	-H "Content-Type: application/json" \
+	-d '{"email":"rohan@example.com","password":"folkpass123"}'
+curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/auth/me
+curl -i -c cookies.txt -b cookies.txt -X POST http://localhost:3000/api/auth/refresh
+curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/orders?page=1
+```
+
+### Threat model notes
+- XSS: tokens never touch `localStorage` or `sessionStorage`; only HttpOnly cookies. Sanitize any user input rendered in the UI.
+- CSRF: SameSite cookies plus the ability to pair with Origin/Referer checks on sensitive routes. Refresh token is Strict to block cross-site refresh attempts.
+- Replay: short-lived access tokens plus refresh rotation via `refreshTokenVersion` narrows the usable window of stolen tokens. Consider IP/device binding for stricter setups.
+
 ## Setup
 - Install tooling: `npm install --save-dev prisma` and `npm install @prisma/client` (already in `package.json`).
 - Configure your database URL in `.env` (example): `DATABASE_URL="postgresql://username:password@localhost:5432/mydb"`.
