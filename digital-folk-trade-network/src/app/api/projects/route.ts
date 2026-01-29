@@ -1,6 +1,6 @@
 import { requireAuthPayload } from "@/lib/auth";
 import { checkAccess } from "@/lib/rbac";
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
+import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 export async function GET(req: Request) {
   try {

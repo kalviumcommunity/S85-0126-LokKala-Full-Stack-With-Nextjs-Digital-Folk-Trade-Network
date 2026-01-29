@@ -1,8 +1,10 @@
 import { requireAuthPayload } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
+import { redis } from "@/lib/redis";
+import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
-// import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
+const USERS_CACHE_TTL_SECONDS = 60;
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -26,21 +28,50 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
     }
 
-    // Example: Replace with actual user lookup logic
-    // const user = await prisma.user.findUnique({ where: { id: Number(id) } });
-    // if (!user) {
-    //   return sendError("User not found", ERROR_CODES.NOT_FOUND, 404);
-    // }
-    // return sendSuccess(user, "User found");
+    const userId = Number(id);
+    if (Number.isNaN(userId)) {
+      return sendError("Invalid user id", ERROR_CODES.BAD_REQUEST, 400);
+    }
 
-    // Demo logic
-    if (id === "1") {
-      return sendSuccess({ id: 1, name: "Alice" }, "User found");
-    } else if (id === "2") {
-      return sendSuccess({ id: 2, name: "Bob" }, "User found");
-    } else {
+    const cacheKey = `user:${userId}`;
+    const cacheStart = Date.now();
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        const user = JSON.parse(cached);
+        console.log(`[Cache] ${cacheKey} hit (${Date.now() - cacheStart}ms)`);
+        return sendSuccess(user, "User found (cache)");
+      }
+    } catch (error) {
+      console.warn(`[Cache] ${cacheKey} read failed`, error);
+    }
+
+    const dbStart = Date.now();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
       return sendError("User not found", ERROR_CODES.NOT_FOUND, 404);
     }
+
+    try {
+      await redis.set(cacheKey, JSON.stringify(user), "EX", USERS_CACHE_TTL_SECONDS);
+      console.log(
+        `[Cache] ${cacheKey} miss -> cached for ${USERS_CACHE_TTL_SECONDS}s (${Date.now() - dbStart}ms)`
+      );
+    } catch (error) {
+      console.warn(`[Cache] ${cacheKey} write failed`, error);
+    }
+
+    return sendSuccess(user, "User found");
   } catch (err) {
     return sendError("Failed to fetch user", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
