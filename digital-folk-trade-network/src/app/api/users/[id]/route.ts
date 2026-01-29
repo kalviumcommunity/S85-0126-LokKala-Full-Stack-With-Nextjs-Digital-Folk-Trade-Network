@@ -8,7 +8,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   try {
     const { id } = params;
 
-    const auth = requireAuthPayload(request);
+    const auth = await requireAuthPayload(request);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }

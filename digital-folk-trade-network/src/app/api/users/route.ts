@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 
 export async function GET(req: Request) {
   try {
-    const auth = requireAuthPayload(req);
+    const auth = await requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }

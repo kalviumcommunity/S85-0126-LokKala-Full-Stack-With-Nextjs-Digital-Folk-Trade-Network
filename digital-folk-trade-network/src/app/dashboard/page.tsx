@@ -39,7 +39,7 @@ function DecisionBadge({ allowed }: { allowed: boolean }) {
 
 export default async function Dashboard() {
   const data = await getDashboardData();
-  const auth = getAuthPayloadFromCookies();
+  const auth = await getAuthPayloadFromCookies();
   const role: AppRole = auth?.role ?? 'GUEST';
 
   const decisions: Decision[] = [

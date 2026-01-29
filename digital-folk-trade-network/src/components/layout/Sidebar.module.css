@@ -1,0 +1,29 @@
+.sidebar {
+  width: 240px;
+  background: #f3f4f6;
+  border-right: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.title {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.sidebarList {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebarItem {
+  margin-bottom: 8px;
+}
+
+.sidebarLink {
+  text-decoration: none;
+  color: #374151;
+}
+
+.sidebarLink:hover {
+  color: #2563eb;
+}

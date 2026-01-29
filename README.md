@@ -450,3 +450,36 @@ Reusable HTML templates are used for personalization and consistency.
 
 ### Reflection
 Integrating transactional emails highlighted the importance of reliable communication. Using SendGrid simplified delivery while keeping credentials secure and manageable.
+
+
+
+
+## Layout & Component Architecture
+
+### Component Hierarchy
+LayoutWrapper
+ ├── Header
+ ├── Sidebar
+ └── Page Content
+
+### Reusable Components
+- Header: Global navigation
+- Sidebar: Contextual navigation
+- LayoutWrapper: Shared layout wrapper
+- Button: Reusable UI component with variants
+
+### Styling Approach
+- CSS Modules for scoped styling
+- No external CSS framework
+- Clear separation of structure and styles
+
+### Design Decisions
+- Centralized layout logic
+- Barrel exports for cleaner imports
+- Reusable components reduce duplication
+
+### Screenshots
+(Include dashboard and button screenshots)
+
+### Reflection
+Using CSS Modules with a component-driven architecture provides strong encapsulation, predictable styling, and long-term maintainability without reliance on third-party UI frameworks.

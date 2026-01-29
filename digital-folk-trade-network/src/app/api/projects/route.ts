@@ -4,7 +4,7 @@ import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 
 export async function GET(req: Request) {
   try {
-    const auth = requireAuthPayload(req);
+    const auth = await requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
