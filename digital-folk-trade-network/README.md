@@ -2,6 +2,33 @@
 
 Prisma is configured as the type-safe data layer for this Next.js app backed by PostgreSQL.
 
+## Redis caching
+- Connection: [src/lib/redis.ts](src/lib/redis.ts) creates a singleton using `REDIS_URL` (defaults to `redis://localhost:6379`).
+- Cache-aside reads:
+	- Users collection at [src/app/api/users/route.ts](src/app/api/users/route.ts) uses cache key `users:list` with a 60s TTL.
+	- Single user at [src/app/api/users/[id]/route.ts](src/app/api/users/%5Bid%5D/route.ts) uses `user:<id>` with the same TTL.
+- Writes and invalidation: POST `/api/users` clears `users:list` so the next read refreshes from the database.
+- Read/write snippets (truncated for clarity):
+
+```ts
+const cached = await redis.get(cacheKey);
+if (cached) return sendSuccess(JSON.parse(cached), "Users fetched from cache");
+
+const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, role: true, createdAt: true } });
+await redis.set(cacheKey, JSON.stringify(users), "EX", 60);
+
+await redis.del("users:list"); // on POST
+```
+
+### Latency check
+- Cold request (miss): `Measure-Command { curl http://localhost:3000/api/users }` logs a `[Cache] users:list miss` line and will be slower because it hits Postgres.
+- Warm request (hit): run the same command again; expect a `[Cache] users:list hit` log and materially lower latency (example: 120ms miss vs 10-20ms hit on local dev). Capture console output or Postman timings for the assignment evidence.
+
+### Coherence and stale data
+- Strategy: cache-aside with short TTL (60s) plus explicit invalidation on writes keeps data fresh while still accelerating hot reads. Single-user lookups also expire quickly to avoid stale profiles.
+- Risk handling: Redis failures fall back to direct DB reads so correctness wins over speed. TTL bounds staleness; invalidation on POST ensures new users appear immediately in listings.
+- Reflection: A stale cache is worse than no cache when it misleads users; the short TTL plus targeted invalidation keeps responses trustworthy while still delivering fast hits.
+
 ## JWT & session hardening
 - Secrets required: set `DATABASE_URL`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` in `.env` (32+ chars for both secrets). The Zod guard in [src/lib/env.ts](src/lib/env.ts) fails fast if any are missing.
 - Access tokens: 15m lifetime, signed with `JWT_SECRET`, stored as HTTP-only, SameSite=Lax cookies named `accessToken`.

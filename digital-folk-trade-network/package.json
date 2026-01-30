@@ -18,6 +18,8 @@
     "@tailwindcss/vite": "^4.1.18",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "ioredis": "^5.9.2",
+    "jsonwebtoken": "^9.0.2",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.2",
     "react": "19.2.3",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
