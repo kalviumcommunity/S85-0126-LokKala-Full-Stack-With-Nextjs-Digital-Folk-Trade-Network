@@ -1,45 +1,44 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema, SignupFormData } from "@/schemas/signupSchema";
+import FormInput from "@/components/FormInput";
 
 export default function SignupPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  async function onSubmit(data: SignupFormData) {
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
-      const text = await res.text();
-      let data: { message?: string; success?: boolean } = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        /* non-JSON response */
-      }
       if (!res.ok) {
-        setError(data.message || `Request failed (${res.status})`);
+        const text = await res.text();
+        let body = {};
+        try {
+          body = text ? JSON.parse(text) : {};
+        } catch {}
+        throw new Error((body as any).message || `Request failed (${res.status})`);
+      }
+      const json = await res.json().catch(() => ({}));
+      if ((json as any).success) {
+        window.location.href = "/login";
         return;
       }
-      if (data.success) {
-        window.location.href = '/login';
-        return;
-      }
-      setError('Invalid response from server');
+      // fallback
+      window.location.href = "/login";
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign up failed');
-    } finally {
-      setLoading(false);
+      alert(err instanceof Error ? err.message : "Sign up failed");
     }
   }
 
@@ -47,59 +46,21 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-medium text-slate-800">Sign up</h1>
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm text-slate-600">
-              Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-slate-800"
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm text-slate-600">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-slate-800"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm text-slate-600">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 w-full rounded border border-slate-200 px-3 py-2 text-slate-800"
-            />
-          </div>
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+          <FormInput label="Name" name="name" register={register} error={errors.name?.message as any} />
+          <FormInput label="Email" name="email" type="email" register={register} error={errors.email?.message as any} />
+          <FormInput label="Password" name="password" type="password" register={register} error={errors.password?.message as any} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {loading ? 'Creating account…' : 'Create account'}
+            {isSubmitting ? "Creating account…" : "Create account"}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-500">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link href="/login" className="text-indigo-600 hover:underline">
             Log in
           </Link>

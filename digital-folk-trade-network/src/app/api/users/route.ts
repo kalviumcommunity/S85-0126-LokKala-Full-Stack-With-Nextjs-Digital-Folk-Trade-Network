@@ -1,4 +1,3 @@
- RBAC
 import { requireAuthPayload } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
@@ -6,6 +5,7 @@ import { redis } from "@/lib/redis";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { userSchema } from "@/lib/schemas/userSchema";
 import { ZodError } from "zod";
+// import { handleError } from '@/lib/errorHandler'; // formatting: keep imports at the top if needed
 
 const USERS_CACHE_KEY = "users:list";
 const USERS_CACHE_TTL_SECONDS = 60;
@@ -63,11 +63,20 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+form_handling
+    // 1. You must get the auth payload first before checking permissions
+    const auth = await requireAuthPayload(req);
+    if (!auth) {
+        return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
+    }
+
+    // 2. Now check access using the auth data
     const auth = requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
 
+ main
     const decision = checkAccess({ role: auth.role, action: "users:write", resource: "users" });
     if (!decision.allowed) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
@@ -83,14 +92,8 @@ export async function POST(req: Request) {
     console.log(`[Cache] ${USERS_CACHE_KEY} invalidated after POST /api/users`);
 
     return sendSuccess(data, "User created successfully", 201);
-import { handleError } from '@/lib/errorHandler';
-
-export async function GET(req: Request) {
-  try {
-    // Your user logic here
-    return new Response(JSON.stringify({ success: true, message: "User route accessible to all authenticated users." }), { status: 200 });
- main
-  } catch (error) {
-    return handleError(error, { req });
+  } catch (err) {
+    // 3. Added the missing catch block to close the function
+    return sendError("Failed to create user", ERROR_CODES.INTERNAL_ERROR, 500, err);
   }
 }
