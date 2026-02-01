@@ -478,8 +478,15 @@ LayoutWrapper
 - Barrel exports for cleaner imports
 - Reusable components reduce duplication
 
-### Screenshots
-(Include dashboard and button screenshots)
+React Hook Form setup: use useForm<SignupFormData>({ resolver: zodResolver(signupSchema) }) so form state is managed efficiently and validation runs via the resolver.
+Zod schema & zodResolver: the schema is in src/schemas/signupSchema.ts. Zod centralizes validation rules (min lengths, email format) and yields field messages consumed by React Hook Form.
+Reusable component pattern: FormInput.tsx wraps label, input, and error UI. It connects label → input with htmlFor/id, sets aria-invalid when errors exist, and displays accessible error messages. Using FormInput in page.tsx reduces duplication and improves consistency.
+Accessibility & validation notes: labels are linked to inputs, aria-invalid is used, and errors are shown immediately. This improves keyboard and screen reader experience and prevents invalid submissions via schema enforcement.
+Try it: after installing deps run:
+Optional package.json edit (only if you prefer to record deps there)
+Add to dependencies in package.json:
+Then run:
+
 
 ### Reflection
 Using CSS Modules with a component-driven architecture provides strong encapsulation, predictable styling, and long-term maintainability without reliance on third-party UI frameworks.
