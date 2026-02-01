@@ -1,23 +1,99 @@
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #2563eb;
-  color: white;
-  padding: 12px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: #c0392b;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.16);
 }
 
-.logo {
-  font-size: 18px;
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.7);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.logoText {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.navLink {
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.78);
+  padding: 6px 0;
+}
+
+.navLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 999px;
+  background-color: transparent;
+}
+
+.navLink:hover {
+  color: #ffffff;
+}
+
+.navLinkActive {
+  color: #ffffff;
   font-weight: 600;
 }
 
-.nav a {
-  margin-left: 16px;
-  color: white;
-  text-decoration: none;
+.navLinkActive::after {
+  background-color: #fef2f2;
 }
 
-.nav a:hover {
-  text-decoration: underline;
+@media (max-width: 720px) {
+  .inner {
+    padding-inline: 12px;
+  }
+
+  .logoText {
+    font-size: 13px;
+  }
+
+  .nav {
+    gap: 12px;
+  }
+
+  .navLink {
+    font-size: 13px;
+  }
 }

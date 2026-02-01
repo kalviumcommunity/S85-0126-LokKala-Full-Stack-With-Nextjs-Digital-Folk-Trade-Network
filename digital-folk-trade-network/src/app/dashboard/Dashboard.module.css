@@ -1,0 +1,92 @@
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  border-radius: 16px;
+  background-color: #fff7f5;
+  background-image:
+    radial-gradient(circle at 12px 12px, rgba(185, 28, 28, 0.08) 1.5px, transparent 1.6px),
+    radial-gradient(circle at 24px 24px, rgba(220, 38, 38, 0.06) 1px, transparent 1.1px);
+  background-size: 28px 28px;
+}
+
+.header {
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(185, 28, 28, 0.12);
+}
+
+.title {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  color: #7f1d1d;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #475569;
+  max-width: 70ch;
+}
+
+.statsSection {
+  margin-top: 24px;
+}
+
+.sectionTitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #1f2937;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7f1d1d;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardValue {
+  margin: 10px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+@media (max-width: 720px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .main {
+    padding: 28px 16px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+}
