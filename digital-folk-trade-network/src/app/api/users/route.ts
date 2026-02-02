@@ -2,8 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { requireAuthPayload } from "@/lib/auth";
 import { checkAccess } from "@/lib/rbac";
 import { redis } from "@/lib/redis";
+
 import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
 import { userSchema } from "@/lib/schemas/userSchema";
+
+import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { detectSqlInjection, sanitizeObject } from "@/lib/sanitize";
+import { userSchema } from "@/lib/schemas/userSchema";
+import { ZodError } from "zod";
+
 
 const USERS_CACHE_KEY = "users:list";
 const USERS_CACHE_TTL_SECONDS = 60;
@@ -28,11 +35,19 @@ export async function GET(req: Request) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
     }
 
+
     // 1️⃣ Try cache first
+
+    const cacheStart = Date.now();
+
     try {
       const cached = await redis.get(USERS_CACHE_KEY);
       if (cached) {
         const cachedUsers = JSON.parse(cached);
+
+
+        console.log(`[Cache] ${USERS_CACHE_KEY} hit (${Date.now() - cacheStart}ms)`);
+
         return sendSuccess(cachedUsers, "Users fetched from cache");
       }
     } catch (error) {
@@ -84,18 +99,33 @@ export async function POST(req: Request) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
 
+
     const decision = checkAccess({
       role: auth.role,
       action: "users:write",
       resource: "users",
     });
 
+
+    const decision = checkAccess({ role: auth.role, action: "users:write", resource: "users" });
+
     if (!decision.allowed) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
     }
 
     const body = await req.json();
-    const data = userSchema.parse(body);
+    const parsed = userSchema.parse(body);
+    const data = sanitizeObject(parsed);
+
+    const sqliHit = detectSqlInjection([data.name, data.email]);
+    if (sqliHit) {
+      return sendError(
+        "Potential SQL injection detected; request blocked",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        { input: sqliHit }
+      );
+    }
 
     // TODO: create user in DB
     // const user = await prisma.user.create({ data });
@@ -104,6 +134,7 @@ export async function POST(req: Request) {
     await redis.del(USERS_CACHE_KEY);
 
     return sendSuccess(data, "User created successfully", 201);
+
   } catch (err) {
     return sendError(
       "Failed to create user",
@@ -111,5 +142,21 @@ export async function POST(req: Request) {
       500,
       err
     );
+
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return sendError(
+        "Validation Error",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        error.issues.map((e) => ({
+          field: e.path[0],
+          message: e.message,
+        }))
+      );
+    }
+
+    return sendError("Failed to create user", ERROR_CODES.INTERNAL_ERROR, 500, error);
+
   }
 }

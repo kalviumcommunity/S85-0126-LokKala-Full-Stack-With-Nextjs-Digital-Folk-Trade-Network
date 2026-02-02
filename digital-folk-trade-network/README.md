@@ -2,6 +2,95 @@
 
 Prisma is configured as the type-safe data layer for this Next.js app backed by PostgreSQL.
 
+## Layout and UI architecture
+
+Component hierarchy
+
+```
+LayoutWrapper
+├─ Header
+├─ Sidebar
+└─ Page content (per route)
+```
+
+- Layout shell lives in [src/components/layout/LayoutWrapper.tsx](src/components/layout/LayoutWrapper.tsx) with an accessible skip link and a dedicated `main` landmark.
+- Global navigation is handled by [src/components/layout/Header.tsx](src/components/layout/Header.tsx) (primary links + call to action) and [src/components/layout/Sidebar.tsx](src/components/layout/Sidebar.tsx) (section navigation).
+- Reusable UI atoms start with [src/components/ui/Button.tsx](src/components/ui/Button.tsx) and [src/components/ui/Card.tsx](src/components/ui/Card.tsx), exported via [src/components/index.ts](src/components/index.ts).
+
+Props contracts (excerpt)
+
+```ts
+// Button
+type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonSize = "sm" | "md" | "lg";
+interface ButtonProps {
+	label: string;
+	variant?: ButtonVariant;
+	size?: ButtonSize;
+	fullWidth?: boolean;
+	isLoading?: boolean;
+	leftIcon?: React.ReactNode;
+	rightIcon?: React.ReactNode;
+}
+
+// Card
+type CardTone = "default" | "muted" | "highlight";
+interface CardProps {
+	title?: string;
+	subtitle?: string;
+	actions?: React.ReactNode;
+	tone?: CardTone;
+	children: React.ReactNode;
+}
+```
+
+How to preview components
+
+- Run `npm install` then `npm run storybook` to open the Storybook canvas on http://localhost:6006.
+- Stories live at [src/components/ui/Button.stories.tsx](src/components/ui/Button.stories.tsx) and [src/components/ui/Card.stories.tsx](src/components/ui/Card.stories.tsx). The Storybook config is in [.storybook/main.ts](.storybook/main.ts).
+- Use Storybook controls to toggle `variant`, `size`, and `isLoading` on Button and switch `tone` on Card.
+
+Accessibility and visual consistency
+
+- Semantic landmarks: header, nav, aside, and `main` are declared in layout components; `aria-current` highlights active nav links.
+- Skip link in LayoutWrapper jumps directly to `#main-content` for keyboard users.
+- Focus rings use high-contrast outlines (`:focus-visible` in [src/app/globals.css](src/app/globals.css)). Buttons expose `aria-busy` while loading.
+- Theming uses CSS variables and gradients defined in [src/app/globals.css](src/app/globals.css) to keep Header, Sidebar, and UI atoms aligned.
+
+## Responsive & themed design (Tailwind)
+
+- Tailwind config: see [tailwind.config.ts](tailwind.config.ts) (dark mode via `class`). PostCSS pipeline is in [postcss.config.mjs](postcss.config.mjs); Tailwind layers are injected in [src/app/globals.css](src/app/globals.css).
+- Breakpoints (mobile-first): xs 480px, sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1440px.
+- Palette: brand (#fb923c/#f97316/#ea580c), surface (light #f8fafc, dark #0b1224), text (base #0f172a, muted #334155, on-dark #e5e7eb), accent gradient (orange→red→violet).
+- Theme toggle: `darkMode: "class"`; [src/context/UIContext.tsx](src/context/UIContext.tsx) syncs `html.dark` with localStorage + system preference, [src/components/ui/ThemeToggle.tsx](src/components/ui/ThemeToggle.tsx) renders the control inside [src/components/layout/Header.tsx](src/components/layout/Header.tsx).
+- Responsive demo: [src/components/layout/ResponsiveShowcase.tsx](src/components/layout/ResponsiveShowcase.tsx) plus the home page grid in [src/app/page.tsx](src/app/page.tsx) show hero + cards adapting across breakpoints with `dark:` variants.
+- Run `npm install` (adds Tailwind) then `npm run dev`; verify theme switching and responsiveness in browser devtools device toolbar. Storybook remains available via `npm run storybook`.
+
+## Input sanitization & OWASP hygiene
+
+- Library: [sanitize-html](https://www.npmjs.com/package/sanitize-html) via helper [src/lib/sanitize.ts](src/lib/sanitize.ts) providing `sanitizeInput`, deep `sanitizeObject`, and `detectSqlInjection` regex guards (simple checks for `or 1=1`, inline comments, `drop table`, etc.).
+- API usage: [src/app/api/users/route.ts](src/app/api/users/route.ts) and [src/app/api/tasks/route.ts](src/app/api/tasks/route.ts) sanitize request bodies and block obvious SQLi patterns before DB work. User validation also trims/scripts-strips via [src/lib/schemas/userSchema.ts](src/lib/schemas/userSchema.ts). Prisma already parameterizes queries to avoid injection.
+- UI encoding: the home page shows a before/after sanitization demo in [src/app/page.tsx](src/app/page.tsx) to illustrate `<script>alert("Hacked!")</script>` and `' OR 1=1 --` being neutralized. Avoid `dangerouslySetInnerHTML`; render sanitized strings directly.
+- Evidence to capture: console/logs showing SQLi blocks, screenshots of the sanitization demo, and curl attempts with malicious payloads returning 400 with the offending input echoed in error detail.
+- Future hardening: add CSP headers, HTTP security headers (HSTS, X-Content-Type-Options), stricter HTML allowlists per field, and periodic OWASP ASVS reviews.
+
+Accessibility & contrast notes
+
+- Dark mode uses `html.dark` for consistent `dark:` styles; toggling preserves preference in localStorage and respects system defaults.
+- Color choices keep text/background contrast above WCAG AA for primary surfaces; focus states remain visible in both themes.
+- Buttons, cards, and navigation retain semantic tags and `aria-current`/`aria-pressed` markers for assistive tech.
+
+Reflection prompts
+
+- Reusable layouts lock in navigation structure, so feature teams drop pages into a consistent shell without rethinking chrome or a11y each time.
+- Clear props contracts make components discoverable and safer to compose; variants encode the allowed visual states.
+- Trade-off: stricter design tokens reduce ad-hoc styling freedom, but the payoff is predictable UI and faster onboarding.
+
+Submission links (fill in your own)
+
+- GitHub PR URL: _add reviewer-accessible link_
+- Video explanation URL: _add public video link_
+
 ## Redis caching
 - Connection: [src/lib/redis.ts](src/lib/redis.ts) creates a singleton using `REDIS_URL` (defaults to `redis://localhost:6379`).
 - Cache-aside reads:

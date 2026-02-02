@@ -1,6 +1,6 @@
 import Header from "./Header";
-import Sidebar from "./Sidebar";
 import styles from "./LayoutWrapper.module.css";
+import Sidebar from "./Sidebar";
 
 export function LayoutWrapper({
   children,
@@ -9,10 +9,15 @@ export function LayoutWrapper({
 }) {
   return (
     <div className={styles.container}>
+      <a className={styles.skipLink} href="#main-content">
+        Skip to main content
+      </a>
       <Header />
       <div className={styles.body}>
         <Sidebar />
-        <main className={styles.content}>{children}</main>
+        <main id="main-content" className={styles.content} role="main">
+          {children}
+        </main>
       </div>
     </div>
   );
