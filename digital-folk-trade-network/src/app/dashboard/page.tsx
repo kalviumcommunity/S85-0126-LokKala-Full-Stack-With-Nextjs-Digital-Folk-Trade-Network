@@ -17,6 +17,12 @@ export default function DashboardPage() {
         setLoadingUsers(true);
         setUsersError(null);
 
+        // Simulate network delay to visualize loading state
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        // Uncomment the line below to test error handling
+        // throw new Error("Simulated error: Unable to connect to the server");
+
         const response = await fetch("/api/users", {
           method: "GET",
           credentials: "include", // ✅ IMPORTANT for cookies

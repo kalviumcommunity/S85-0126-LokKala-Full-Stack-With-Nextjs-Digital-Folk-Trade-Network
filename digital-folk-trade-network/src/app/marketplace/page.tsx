@@ -7,6 +7,11 @@ type Artwork = {
 };
 
 async function getArtworks(): Promise<Artwork[]> {
+  // Simulate network delay to visualize loading skeleton
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  
+  // Uncomment the line below to test error boundary
+  // throw new Error("Failed to fetch artworks from the database");
   
   return [
     { id: '1', title: 'Tribal Painting' },
