@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface UIContextType {
   theme: "light" | "dark";
@@ -11,7 +11,13 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = window.localStorage.getItem("ui-theme");
+    if (stored === "light" || stored === "dark") return stored;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return prefersDark ? "dark" : "light";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleTheme = () => {
@@ -21,6 +27,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
       return next;
     });
   };
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.dataset.theme = theme;
+    window.localStorage.setItem("ui-theme", theme);
+  }, [theme]);
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => {

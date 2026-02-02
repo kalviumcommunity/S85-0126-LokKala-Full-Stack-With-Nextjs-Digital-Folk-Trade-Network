@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "../ui/ThemeToggle";
 import styles from "./Header.module.css";
 
 const navItems = [
@@ -47,6 +48,7 @@ export default function Header() {
           <Link className={styles.actionLink} href="/dashboard">
             Sell your craft
           </Link>
+          <ThemeToggle />
         </div>
       </div>
     </header>
