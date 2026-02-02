@@ -66,6 +66,14 @@ Accessibility and visual consistency
 - Responsive demo: [src/components/layout/ResponsiveShowcase.tsx](src/components/layout/ResponsiveShowcase.tsx) plus the home page grid in [src/app/page.tsx](src/app/page.tsx) show hero + cards adapting across breakpoints with `dark:` variants.
 - Run `npm install` (adds Tailwind) then `npm run dev`; verify theme switching and responsiveness in browser devtools device toolbar. Storybook remains available via `npm run storybook`.
 
+## Input sanitization & OWASP hygiene
+
+- Library: [sanitize-html](https://www.npmjs.com/package/sanitize-html) via helper [src/lib/sanitize.ts](src/lib/sanitize.ts) providing `sanitizeInput`, deep `sanitizeObject`, and `detectSqlInjection` regex guards (simple checks for `or 1=1`, inline comments, `drop table`, etc.).
+- API usage: [src/app/api/users/route.ts](src/app/api/users/route.ts) and [src/app/api/tasks/route.ts](src/app/api/tasks/route.ts) sanitize request bodies and block obvious SQLi patterns before DB work. User validation also trims/scripts-strips via [src/lib/schemas/userSchema.ts](src/lib/schemas/userSchema.ts). Prisma already parameterizes queries to avoid injection.
+- UI encoding: the home page shows a before/after sanitization demo in [src/app/page.tsx](src/app/page.tsx) to illustrate `<script>alert("Hacked!")</script>` and `' OR 1=1 --` being neutralized. Avoid `dangerouslySetInnerHTML`; render sanitized strings directly.
+- Evidence to capture: console/logs showing SQLi blocks, screenshots of the sanitization demo, and curl attempts with malicious payloads returning 400 with the offending input echoed in error detail.
+- Future hardening: add CSP headers, HTTP security headers (HSTS, X-Content-Type-Options), stricter HTML allowlists per field, and periodic OWASP ASVS reviews.
+
 Accessibility & contrast notes
 
 - Dark mode uses `html.dark` for consistent `dark:` styles; toggling preserves preference in localStorage and respects system defaults.

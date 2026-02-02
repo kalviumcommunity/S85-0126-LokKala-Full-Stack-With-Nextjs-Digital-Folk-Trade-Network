@@ -1,6 +1,7 @@
 import { requireAuthPayload } from "@/lib/auth";
 import { checkAccess } from "@/lib/rbac";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { detectSqlInjection, sanitizeObject } from "@/lib/sanitize";
 // import { prisma } from "@/lib/prisma"; // Uncomment if you use Prisma
 
 export async function GET(req: Request) {
@@ -44,7 +45,18 @@ export async function POST(req: Request) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403, { permission: decision.permission });
     }
 
-    const data = await req.json();
+    const body = await req.json();
+    const data = sanitizeObject(body);
+
+    const sqliHit = detectSqlInjection([data.title]);
+    if (sqliHit) {
+      return sendError(
+        "Potential SQL injection detected; request blocked",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        { input: sqliHit }
+      );
+    }
 
     if (!data.title) {
       return sendError(
