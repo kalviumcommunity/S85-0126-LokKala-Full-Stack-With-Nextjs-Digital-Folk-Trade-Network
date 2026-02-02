@@ -10,6 +10,8 @@ export default function Sidebar() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/about', label: 'About' },
     { href: '/art/1', label: 'Art' },
+    { href: '/login', label: 'Login' },
+    { href: '/signup', label: 'Sign up' },
   ];
 
   return (
