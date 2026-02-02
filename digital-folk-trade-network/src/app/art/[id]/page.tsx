@@ -20,6 +20,12 @@ export default async function ArtDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Simulate network delay to visualize loading skeleton
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  
+  // Uncomment the line below to test error boundary
+  // throw new Error("Failed to load artwork details");
+  
   const { id } = await params;   // unwrap async params
   const art = getArtwork(id);
 
