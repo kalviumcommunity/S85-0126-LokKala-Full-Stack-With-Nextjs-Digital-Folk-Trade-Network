@@ -5,8 +5,8 @@ import styles from "./Sidebar.module.css";
 
 const links = [
   { href: "/dashboard", label: "Overview" },
-  { href: "/users", label: "Users" },
-  { href: "/settings", label: "Settings" },
+  { href: "/marketplace", label: "Marketplace" },
+  { href: "/about", label: "About" },
 ];
 
 export default function Sidebar() {
