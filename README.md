@@ -450,3 +450,43 @@ Reusable HTML templates are used for personalization and consistency.
 
 ### Reflection
 Integrating transactional emails highlighted the importance of reliable communication. Using SendGrid simplified delivery while keeping credentials secure and manageable.
+
+
+
+
+## Layout & Component Architecture
+
+### Component Hierarchy
+LayoutWrapper
+ ├── Header
+ ├── Sidebar
+ └── Page Content
+
+### Reusable Components
+- Header: Global navigation
+- Sidebar: Contextual navigation
+- LayoutWrapper: Shared layout wrapper
+- Button: Reusable UI component with variants
+
+### Styling Approach
+- CSS Modules for scoped styling
+- No external CSS framework
+- Clear separation of structure and styles
+
+### Design Decisions
+- Centralized layout logic
+- Barrel exports for cleaner imports
+- Reusable components reduce duplication
+
+React Hook Form setup: use useForm<SignupFormData>({ resolver: zodResolver(signupSchema) }) so form state is managed efficiently and validation runs via the resolver.
+Zod schema & zodResolver: the schema is in src/schemas/signupSchema.ts. Zod centralizes validation rules (min lengths, email format) and yields field messages consumed by React Hook Form.
+Reusable component pattern: FormInput.tsx wraps label, input, and error UI. It connects label → input with htmlFor/id, sets aria-invalid when errors exist, and displays accessible error messages. Using FormInput in page.tsx reduces duplication and improves consistency.
+Accessibility & validation notes: labels are linked to inputs, aria-invalid is used, and errors are shown immediately. This improves keyboard and screen reader experience and prevents invalid submissions via schema enforcement.
+Try it: after installing deps run:
+Optional package.json edit (only if you prefer to record deps there)
+Add to dependencies in package.json:
+Then run:
+
+
+### Reflection
+Using CSS Modules with a component-driven architecture provides strong encapsulation, predictable styling, and long-term maintainability without reliance on third-party UI frameworks.
