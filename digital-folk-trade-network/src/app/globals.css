@@ -1,0 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+	--bg-canvas: #0b1224;
+	--panel: rgba(255, 255, 255, 0.04);
+	--panel-strong: rgba(255, 255, 255, 0.08);
+	--border: rgba(255, 255, 255, 0.12);
+	--brand: #f97316;
+	--brand-strong: #ef4444;
+	--text-primary: #e5e7eb;
+	--text-muted: #cbd5e1;
+	--accent: linear-gradient(120deg, #f97316 0%, #ef4444 45%, #a855f7 100%);
+	--shadow-elevated: 0 14px 40px rgba(0, 0, 0, 0.24);
+	color-scheme: dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	min-height: 100%;
+	font-family: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+	background: radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.12), transparent 25%),
+		radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.12), transparent 22%),
+		var(--bg-canvas);
+	color: var(--text-primary);
+	line-height: 1.6;
+	letter-spacing: 0.01em;
+}
+
+a {
+	color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+::selection {
+	background: rgba(249, 115, 22, 0.25);
+	color: #fff;
+}
+
+:focus-visible {
+	outline: 2px solid #f97316;
+	outline-offset: 3px;
+}
+
+main {
+	background: var(--panel);
+	border-radius: 18px;
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow-elevated);
+}
