@@ -57,6 +57,21 @@ Accessibility and visual consistency
 - Focus rings use high-contrast outlines (`:focus-visible` in [src/app/globals.css](src/app/globals.css)). Buttons expose `aria-busy` while loading.
 - Theming uses CSS variables and gradients defined in [src/app/globals.css](src/app/globals.css) to keep Header, Sidebar, and UI atoms aligned.
 
+## Responsive & themed design (Tailwind)
+
+- Tailwind config: see [tailwind.config.ts](tailwind.config.ts) (dark mode via `class`). PostCSS pipeline is in [postcss.config.mjs](postcss.config.mjs); Tailwind layers are injected in [src/app/globals.css](src/app/globals.css).
+- Breakpoints (mobile-first): xs 480px, sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1440px.
+- Palette: brand (#fb923c/#f97316/#ea580c), surface (light #f8fafc, dark #0b1224), text (base #0f172a, muted #334155, on-dark #e5e7eb), accent gradient (orange→red→violet).
+- Theme toggle: `darkMode: "class"`; [src/context/UIContext.tsx](src/context/UIContext.tsx) syncs `html.dark` with localStorage + system preference, [src/components/ui/ThemeToggle.tsx](src/components/ui/ThemeToggle.tsx) renders the control inside [src/components/layout/Header.tsx](src/components/layout/Header.tsx).
+- Responsive demo: [src/components/layout/ResponsiveShowcase.tsx](src/components/layout/ResponsiveShowcase.tsx) plus the home page grid in [src/app/page.tsx](src/app/page.tsx) show hero + cards adapting across breakpoints with `dark:` variants.
+- Run `npm install` (adds Tailwind) then `npm run dev`; verify theme switching and responsiveness in browser devtools device toolbar. Storybook remains available via `npm run storybook`.
+
+Accessibility & contrast notes
+
+- Dark mode uses `html.dark` for consistent `dark:` styles; toggling preserves preference in localStorage and respects system defaults.
+- Color choices keep text/background contrast above WCAG AA for primary surfaces; focus states remain visible in both themes.
+- Buttons, cards, and navigation retain semantic tags and `aria-current`/`aria-pressed` markers for assistive tech.
+
 Reflection prompts
 
 - Reusable layouts lock in navigation structure, so feature teams drop pages into a consistent shell without rethinking chrome or a11y each time.
