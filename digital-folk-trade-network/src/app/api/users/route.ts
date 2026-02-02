@@ -1,15 +1,10 @@
 import { requireAuthPayload } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
- concept-layout-component-architecture
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
-
 import { redis } from "@/lib/redis";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { userSchema } from "@/lib/schemas/userSchema";
 import { ZodError } from "zod";
-// import { handleError } from '@/lib/errorHandler'; // formatting: keep imports at the top if needed
- main
 
 const USERS_CACHE_KEY = "users:list";
 const USERS_CACHE_TTL_SECONDS = 60;
@@ -31,21 +26,13 @@ export async function GET(req: Request) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
     }
 
- concept-layout-component-architecture
-    // Example: Replace with actual user fetching logic
-    // const users = await prisma.user.findMany();
-    const users = [
-      { id: 1, name: "Alice" },
-      { id: 2, name: "Bob" },
-    ];
-
     const cacheStart = Date.now();
     try {
       const cached = await redis.get(USERS_CACHE_KEY);
       if (cached) {
-        const users = JSON.parse(cached);
+        const cachedUsers = JSON.parse(cached);
         console.log(`[Cache] ${USERS_CACHE_KEY} hit (${Date.now() - cacheStart}ms)`);
-        return sendSuccess(users, "Users fetched from cache");
+        return sendSuccess(cachedUsers, "Users fetched from cache");
       }
     } catch (error) {
       console.warn(`[Cache] ${USERS_CACHE_KEY} read failed`, error);
@@ -71,7 +58,6 @@ export async function GET(req: Request) {
     } catch (error) {
       console.warn(`[Cache] ${USERS_CACHE_KEY} write failed`, error);
     }
- main
 
     return sendSuccess(users, "Users fetched successfully");
   } catch (err) {
@@ -83,25 +69,14 @@ export async function GET(req: Request) {
     );
   }
 }
- concept-layout-component-architecture
-
 
 export async function POST(req: Request) {
   try {
-form_handling
-    // 1. You must get the auth payload first before checking permissions
     const auth = await requireAuthPayload(req);
-    if (!auth) {
-        return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
-    }
-
-    // 2. Now check access using the auth data
-    const auth = requireAuthPayload(req);
     if (!auth) {
       return sendError("Unauthorized", ERROR_CODES.UNAUTHORIZED, 401);
     }
 
- main
     const decision = checkAccess({ role: auth.role, action: "users:write", resource: "users" });
     if (!decision.allowed) {
       return sendError("Forbidden", ERROR_CODES.FORBIDDEN, 403);
@@ -117,9 +92,19 @@ form_handling
     console.log(`[Cache] ${USERS_CACHE_KEY} invalidated after POST /api/users`);
 
     return sendSuccess(data, "User created successfully", 201);
-  } catch (err) {
-    // 3. Added the missing catch block to close the function
-    return sendError("Failed to create user", ERROR_CODES.INTERNAL_ERROR, 500, err);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return sendError(
+        "Validation Error",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        error.issues.map((e) => ({
+          field: e.path[0],
+          message: e.message,
+        }))
+      );
+    }
+
+    return sendError("Failed to create user", ERROR_CODES.INTERNAL_ERROR, 500, error);
   }
 }
-main
