@@ -1,16 +1,22 @@
-import Redis from "ioredis";
+// src/lib/redis.ts
+// Redis is intentionally DISABLED in local development.
+// Cache must NEVER break auth or routing.
 
-const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
+export const redis = {
+  async get(_key: string) {
+    return null;
+  },
 
-const globalForRedis = global as unknown as { redis?: Redis };
+  async set(
+    _key: string,
+    _value: string,
+    _mode?: string,
+    _ttl?: number
+  ) {
+    return null;
+  },
 
-export const redis =
-  globalForRedis.redis ??
-  new Redis(redisUrl, {
-    // Prevent runaway retry storms during local dev
-    maxRetriesPerRequest: 2,
-  });
-
-if (!globalForRedis.redis) {
-  globalForRedis.redis = redis;
-}
+  async del(_key: string) {
+    return null;
+  },
+};
