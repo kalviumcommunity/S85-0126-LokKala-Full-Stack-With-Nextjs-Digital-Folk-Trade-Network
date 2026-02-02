@@ -30,11 +30,11 @@ export default function LoginPage() {
         setError(data.message || `Request failed (${res.status})`);
         return;
       }
-      if (data.token) {
-        window.location.href = '/dashboard';
+     if (res.ok) {
+         window.location.href = '/dashboard';
         return;
       }
-      setError('Invalid response from server');
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

@@ -19,13 +19,30 @@ export default function DashboardPage() {
 
         const response = await fetch("/api/users", {
           method: "GET",
+          credentials: "include", // ✅ IMPORTANT for cookies
           headers: {
             Accept: "application/json",
           },
         });
 
-        if (response.status === 401 || response.status === 403) {
+        // 🔴 NOT LOGGED IN → redirect
+        if (response.status === 401) {
           window.location.href = "/login";
+          return;
+        }
+
+        // 🟡 LOGGED IN BUT NOT ALLOWED → stay on dashboard
+        if (response.status === 403) {
+          setUsersError(
+            "You do not have permission to view user statistics."
+          );
+          setUsersCount("--");
+          return;
+        }
+
+        if (!response.ok) {
+          setUsersError("Unable to load users right now.");
+          setUsersCount("--");
           return;
         }
 
@@ -34,9 +51,11 @@ export default function DashboardPage() {
         if (cancelled) return;
 
         const list =
-          Array.isArray(data?.data) ? data.data :
-          Array.isArray(data?.users) ? data.users :
-          null;
+          Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.users)
+            ? data.users
+            : null;
 
         if (Array.isArray(list)) {
           setUsersCount(String(list.length));
@@ -63,14 +82,16 @@ export default function DashboardPage() {
   }, []);
 
   const usersDescription =
-    usersError ?? "Registered participants across the folk trade network.";
+    usersError ??
+    "Registered participants across the folk trade network.";
 
   return (
     <main className={styles.main}>
       <header className={styles.header}>
         <h1 className={styles.title}>Digital Folk Trade Dashboard</h1>
         <p className={styles.subtitle}>
-          A calm overview of the cultural marketplace—artists, artworks, and trade activity in one place.
+          A calm overview of the cultural marketplace—artists, artworks, and
+          trade activity in one place.
         </p>
       </header>
 

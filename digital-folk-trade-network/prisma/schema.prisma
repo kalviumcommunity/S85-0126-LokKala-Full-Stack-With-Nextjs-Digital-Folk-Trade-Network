@@ -8,30 +8,17 @@ datasource db {
 }
 
 model User {
-concept-layout-component-architecture
-  id           Int    @id @default(autoincrement())
-  name         String
-  email        String @unique
-  passwordHash String
-  jwt           String?
-  role         Role     @default(USER)
-  refreshTokenVersion Int @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-//main
-
   id                   Int      @id @default(autoincrement())
   name                 String
   email                String   @unique
   passwordHash         String
+  jwt                  String?
   role                 Role     @default(USER)
   refreshTokenVersion  Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
- main
 
-  // Reverse relations
+  // Relations
   artifacts Artifact[] @relation("UserArtifacts")
   orders    Order[]
   reviews   Review[]
