@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
 import { redis } from "@/lib/redis";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { detectSqlInjection, sanitizeObject } from "@/lib/sanitize";
 import { userSchema } from "@/lib/schemas/userSchema";
 import { ZodError } from "zod";
 
@@ -83,7 +84,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const data = userSchema.parse(body);
+    const parsed = userSchema.parse(body);
+    const data = sanitizeObject(parsed);
+
+    const sqliHit = detectSqlInjection([data.name, data.email]);
+    if (sqliHit) {
+      return sendError(
+        "Potential SQL injection detected; request blocked",
+        ERROR_CODES.BAD_REQUEST,
+        400,
+        { input: sqliHit }
+      );
+    }
 
     // TODO: Insert user creation logic here (e.g., save to DB)
     // const user = await prisma.user.create({ data });

@@ -3,11 +3,18 @@ import { Button, Card, ThemeToggle } from "@/components";
 import ResponsiveShowcase from "@/components/layout/ResponsiveShowcase";
 import { useAuth } from "@/hooks/useAuth";
 import { useUI } from "@/hooks/useUI";
+import { sanitizeInput } from "@/lib/sanitize";
 
 const stats = [
   { label: "Artisans", value: "2.4k" },
   { label: "Marketplaces", value: "12" },
   { label: "Avg. Rating", value: "4.8" },
+];
+
+const maliciousSamples = [
+  "<script>alert('Hacked!')</script>",
+  "Hello <b>world</b>",
+  "' OR 1=1 --",
 ];
 
 export default function Home() {
@@ -58,6 +65,31 @@ export default function Home() {
       </section>
 
       <ResponsiveShowcase />
+
+      <Card title="Sanitization demo" subtitle="Before vs after" tone="default">
+        <div className="grid gap-4 md:grid-cols-2 text-sm">
+          <div className="space-y-2">
+            <p className="font-semibold">Raw input</p>
+            <ul className="list-disc space-y-1 pl-4">
+              {maliciousSamples.map((item) => (
+                <li key={item} className="break-words text-text-muted dark:text-text-onDark/70">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <p className="font-semibold">After sanitizeInput</p>
+            <ul className="list-disc space-y-1 pl-4">
+              {maliciousSamples.map((item) => (
+                <li key={item} className="break-words text-green-200">
+                  {sanitizeInput(item) || "(removed)"}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </Card>
     </main>
   );
 }

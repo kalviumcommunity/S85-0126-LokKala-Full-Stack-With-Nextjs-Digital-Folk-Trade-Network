@@ -1,8 +1,9 @@
-import { z } from "zod"; 
+import { sanitizeInput } from "@/lib/sanitize";
+import { z } from "zod";
 
 export const userSchema = z.object({
-    name: z.string().min(2,"Name must be at least 2 characters long"),
-      email: z.string().email("Invalid email address"),
+    name: z.string().min(2,"Name must be at least 2 characters long").transform((v) => sanitizeInput(v)),
+      email: z.string().email("Invalid email address").transform((v) => sanitizeInput(v)),
   age: z.number().min(18, "User must be 18 or older"),
 }); 
 
