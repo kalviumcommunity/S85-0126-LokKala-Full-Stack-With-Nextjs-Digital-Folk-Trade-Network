@@ -15,6 +15,10 @@ const customJestConfig = {
   collectCoverageFrom: [
     'src/components/ui/Button.tsx',
     'src/utils/**/*.{js,jsx,ts,tsx}',
+    'src/app/api/users/route.ts',
+    'src/lib/responseHandler.ts',
+    'src/lib/sanitize.ts',
+    'src/lib/schemas/userSchema.ts',
     '!src/**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   coverageThreshold: {

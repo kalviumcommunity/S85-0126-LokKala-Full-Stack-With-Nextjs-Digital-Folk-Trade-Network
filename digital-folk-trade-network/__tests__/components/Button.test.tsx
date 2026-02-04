@@ -1,6 +1,6 @@
+import Button from '@/components/ui/Button';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Button from '@/components/ui/Button';
 
 describe('Button component', () => {
   it('renders label and handles clicks', async () => {
