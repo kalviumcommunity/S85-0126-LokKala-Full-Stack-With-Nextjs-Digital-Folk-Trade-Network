@@ -58,6 +58,8 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log(`[SECURITY] Login successful for ${updated.email}. Refresh token version rotated from ${user.refreshTokenVersion} to ${updated.refreshTokenVersion}`);
+
     const tokens = generateTokenPair(updated);
 
     const response = attachAuthCookies(

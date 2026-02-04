@@ -61,6 +61,8 @@ export function generateTokenPair(user: {
     ver: user.refreshTokenVersion,
   };
 
+  console.log(`[AUTH] Token pair generated for user ${user.email} (ID: ${user.id}, Version: ${user.refreshTokenVersion})`);
+
   return {
     accessToken: signAccessToken(payload),
     refreshToken: signRefreshToken(payload),

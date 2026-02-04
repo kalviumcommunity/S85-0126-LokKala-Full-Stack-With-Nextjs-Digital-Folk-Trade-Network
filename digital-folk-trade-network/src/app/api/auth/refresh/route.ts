@@ -34,6 +34,8 @@ export async function POST() {
       select: { id: true, email: true, name: true, role: true, refreshTokenVersion: true },
     });
 
+    console.log(`[SECURITY] Token rotation successful for ${updated.email}. Version ${payload.ver} → ${updated.refreshTokenVersion}. Old refresh tokens invalidated.`);
+
     const tokens = generateTokenPair(updated);
     const response = attachAuthCookies(
       sendSuccess(
