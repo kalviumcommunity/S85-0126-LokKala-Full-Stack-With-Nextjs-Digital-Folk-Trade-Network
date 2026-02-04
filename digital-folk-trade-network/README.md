@@ -2,6 +2,15 @@
 
 Prisma is configured as the type-safe data layer for this Next.js app backed by PostgreSQL.
 
+## Unit testing (Jest + RTL)
+
+- Tooling: [jest.config.js](jest.config.js) uses `next/jest` with [jest.setup.js](jest.setup.js) loading `@testing-library/jest-dom` and jsdom. Module aliases `@/*` resolve to `src/`, and CSS modules are mocked via `identity-obj-proxy`.
+- Commands: `pnpm test` runs the suite; `pnpm test:coverage` enforces the global 80% thresholds. The run on 2026-02-04 reported statements 100%, branches 92.85%, functions 100%, lines 100% over the covered scope.
+- Sample tests: logic at [__tests__/math.test.ts](__tests__/math.test.ts) exercises [src/utils/math.ts](src/utils/math.ts); component coverage comes from [__tests__/components/Button.test.tsx](__tests__/components/Button.test.tsx) targeting [src/components/ui/Button.tsx](src/components/ui/Button.tsx).
+- Coverage scope: collection currently targets the shared Button atom and `src/utils` helpers to keep signal high; expand `collectCoverageFrom` when you add more unit coverage (e.g., Cards, RBAC helpers, Prisma guards).
+- CI hint: add `pnpm test:coverage` to your GitHub Actions workflow so PRs fail when thresholds regress.
+- Reflection: tests cover basic math helpers and primary button behavior (click + loading disable). Gaps remain across API routes, forms, and context hooks—prioritize service-layer tests next (testing pyramid: more unit, some integration, few E2E with Playwright/Cypress). Document planned E2E flows alongside future coverage expansions.
+
 ## Layout and UI architecture
 
 Component hierarchy
