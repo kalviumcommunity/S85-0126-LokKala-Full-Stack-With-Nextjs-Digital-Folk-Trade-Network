@@ -1,11 +1,7 @@
-import { prisma } from "@/lib/prisma";
 import { requireAuthPayload } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
 import { redis } from "@/lib/redis";
-
-import { sendSuccess, sendError, ERROR_CODES } from "@/lib/responseHandler";
-import { userSchema } from "@/lib/schemas/userSchema";
-
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 import { detectSqlInjection, sanitizeObject } from "@/lib/sanitize";
 import { userSchema } from "@/lib/schemas/userSchema";
@@ -100,13 +96,6 @@ export async function POST(req: Request) {
     }
 
 
-    const decision = checkAccess({
-      role: auth.role,
-      action: "users:write",
-      resource: "users",
-    });
-
-
     const decision = checkAccess({ role: auth.role, action: "users:write", resource: "users" });
 
     if (!decision.allowed) {
@@ -134,15 +123,6 @@ export async function POST(req: Request) {
     await redis.del(USERS_CACHE_KEY);
 
     return sendSuccess(data, "User created successfully", 201);
-
-  } catch (err) {
-    return sendError(
-      "Failed to create user",
-      ERROR_CODES.INTERNAL_ERROR,
-      500,
-      err
-    );
-
   } catch (error) {
     if (error instanceof ZodError) {
       return sendError(
@@ -157,6 +137,5 @@ export async function POST(req: Request) {
     }
 
     return sendError("Failed to create user", ERROR_CODES.INTERNAL_ERROR, 500, error);
-
   }
 }
