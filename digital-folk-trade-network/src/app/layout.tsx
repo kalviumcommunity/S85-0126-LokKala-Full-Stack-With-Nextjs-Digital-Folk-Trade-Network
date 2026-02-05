@@ -1,7 +1,6 @@
 import "./globals.css";
 import { LayoutWrapper } from "@/components";
-import { AuthProvider } from "@/context/AuthContext";
-import { UIProvider } from "@/context/UIContext";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -11,11 +10,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <UIProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
-          </UIProvider>
-        </AuthProvider>
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
+
+        {/* Global Toast Provider */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+          }}
+        />
       </body>
     </html>
   );
