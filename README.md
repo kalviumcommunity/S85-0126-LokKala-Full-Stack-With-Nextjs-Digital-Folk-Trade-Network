@@ -490,3 +490,25 @@ Then run:
 
 ### Reflection
 Using CSS Modules with a component-driven architecture provides strong encapsulation, predictable styling, and long-term maintainability without reliance on third-party UI frameworks.
+
+
+
+## Client-side Data Fetching with SWR
+
+### Why SWR
+SWR enables stale-while-revalidate fetching, allowing cached data to load instantly while revalidating in the background.
+
+### SWR Keys
+Each API endpoint acts as a unique cache key (e.g., `/api/users`), enabling shared and reusable cached data.
+
+### Data Fetching
+User data is fetched using the SWR hook with loading and error states handled gracefully.
+
+### Mutations & Optimistic UI
+Optimistic updates allow the UI to update instantly before the server confirms the change, improving perceived performance.
+
+### Revalidation
+Data revalidates on tab focus and at intervals to ensure freshness.
+
+### Reflection
+Compared to traditional fetch calls, SWR reduced boilerplate and improved responsiveness. The trade-off between stale and fresh data was acceptable for better UX.

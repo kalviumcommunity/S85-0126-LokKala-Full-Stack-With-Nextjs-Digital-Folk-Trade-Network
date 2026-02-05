@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import styles from "./Dashboard.module.css";
 import { DashboardCard } from "@/components";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import { toast } from "react-hot-toast";
 
 export default function DashboardPage() {
   const [usersCount, setUsersCount] = useState<string>("--");
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [usersError, setUsersError] = useState<string | null>(null);
+
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +28,9 @@ export default function DashboardPage() {
         // Uncomment the line below to test error handling
         // throw new Error("Simulated error: Unable to connect to the server");
 
+        toast.loading("Loading users...");
+
+
         const response = await fetch("/api/users", {
           method: "GET",
           credentials: "include", // ✅ IMPORTANT for cookies
@@ -31,8 +39,11 @@ export default function DashboardPage() {
           },
         });
 
+
         // 🔴 NOT LOGGED IN → redirect
         if (response.status === 401) {
+          toast.dismiss();
+
           window.location.href = "/login";
           return;
         }
@@ -53,7 +64,6 @@ export default function DashboardPage() {
         }
 
         const data = await response.json();
-
         if (cancelled) return;
 
         const list =
@@ -65,13 +75,19 @@ export default function DashboardPage() {
 
         if (Array.isArray(list)) {
           setUsersCount(String(list.length));
+          toast.dismiss();
+          toast.success("Users loaded successfully");
         } else {
           setUsersCount("--");
+          toast.dismiss();
+          toast.error("Unexpected data format");
         }
       } catch (error) {
         if (!cancelled) {
           setUsersError("Unable to load users right now.");
           setUsersCount("--");
+          toast.dismiss();
+          toast.error("Failed to load users");
         }
       } finally {
         if (!cancelled) {
@@ -87,6 +103,20 @@ export default function DashboardPage() {
     };
   }, []);
 
+  const handleResetDemo = async () => {
+    setActionLoading(true);
+    setOpenModal(false);
+
+    toast.loading("Performing action...");
+
+    await new Promise((res) => setTimeout(res, 1500));
+
+    toast.dismiss();
+    toast.success("Action completed successfully");
+
+    setActionLoading(false);
+  };
+
   const usersDescription =
     usersError ??
     "Registered participants across the folk trade network.";
@@ -96,8 +126,13 @@ export default function DashboardPage() {
       <header className={styles.header}>
         <h1 className={styles.title}>Digital Folk Trade Dashboard</h1>
         <p className={styles.subtitle}>
+
           A calm overview of the cultural marketplace—artists, artworks, and
           trade activity in one place.
+
+          A calm overview of the cultural marketplace—artists, artworks, and trade
+          activity in one place.
+
         </p>
       </header>
 
@@ -105,6 +140,12 @@ export default function DashboardPage() {
         <h2 id="stats-heading" className={styles.sectionTitle}>
           Statistics
         </h2>
+
+        {loadingUsers && (
+          <p role="status" aria-live="polite" className={styles.loadingText}>
+            Loading statistics…
+          </p>
+        )}
 
         <div className={styles.statsGrid}>
           <DashboardCard
@@ -123,6 +164,27 @@ export default function DashboardPage() {
             description="Supporting documents and media shared by the community."
           />
         </div>
+      </section>
+
+      <section className={styles.actionsSection}>
+        <button
+          onClick={() => setOpenModal(true)}
+          className={styles.dangerButton}
+        >
+          Reset Demo Data
+        </button>
+
+        <ConfirmModal
+          isOpen={openModal}
+          onConfirm={handleResetDemo}
+          onClose={() => setOpenModal(false)}
+        />
+
+        {actionLoading && (
+          <p role="status" aria-live="polite" className={styles.loadingText}>
+            Processing action…
+          </p>
+        )}
       </section>
     </main>
   );
