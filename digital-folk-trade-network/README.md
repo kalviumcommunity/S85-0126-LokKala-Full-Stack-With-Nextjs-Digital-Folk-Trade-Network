@@ -134,42 +134,535 @@ await redis.del("users:list"); // on POST
 
 ## JWT & session hardening
 
+Our JWT authentication system implements industry best practices for secure session management, including automatic token rotation, HTTP-only cookie storage, and comprehensive security logging.
+
+### Token Architecture
+
+#### Token Structure
+
+JWTs follow the standard three-part structure:
+
+**1. Header** (Algorithm & Token Type)
+
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+**2. Payload** (Claims)
+
+```json
+{
+  "sub": 123, // Subject: User ID
+  "email": "user@example.com",
+  "role": "USER", // or "ADMIN", "ARTIST", "GUEST"
+  "ver": 5, // Refresh token version (for rotation)
+  "iat": 1738672800, // Issued at (Unix timestamp)
+  "exp": 1738673700 // Expiration (Unix timestamp)
+}
+```
+
+**3. Signature** (HMAC SHA256)
+
+```
+HMACSHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  JWT_SECRET or JWT_REFRESH_SECRET
+)
+```
+
+#### Dual Token System
+
+We use **two separate tokens** with different lifespans and secrets:
+
+| Feature         | Access Token        | Refresh Token                             |
+| --------------- | ------------------- | ----------------------------------------- |
+| **Lifespan**    | 15 minutes          | 7 days                                    |
+| **Secret**      | `JWT_SECRET`        | `JWT_REFRESH_SECRET`                      |
+| **Cookie Name** | `accessToken`       | `refreshToken`                            |
+| **Purpose**     | API authentication  | Renewing access tokens                    |
+| **SameSite**    | `Lax`               | `Lax` (allows same-site form submissions) |
+| **HttpOnly**    | ✅ Yes              | ✅ Yes                                    |
+| **Secure**      | ✅ Yes (production) | ✅ Yes (production)                       |
+
+**Why two secrets?**
+
+- Separation of concerns: compromising one doesn't compromise the other
+- Different rotation policies: access tokens expire frequently, refresh tokens less so
+- Enhanced security: attacker needs both tokens AND the correct version number
+
+### Secure Token Storage
+
+#### Storage Location
+
+**✅ HTTP-only Cookies** (Our Choice)
+
+```typescript
+response.cookies.set("accessToken", token, {
+  httpOnly: true, // Not accessible via JavaScript
+  secure: isProd, // HTTPS only in production
+  sameSite: "lax", // CSRF protection
+  path: "/",
+  maxAge: 900, // 15 minutes
+});
+```
+
+**❌ LocalStorage / SessionStorage** (Never Used)
+
+- Vulnerable to XSS attacks
+- Accessible by any JavaScript on the page
+- No automatic expiration
+- Can't restrict to HTTPS
+
+**❌ In-Memory** (Not Suitable for Web)
+
+- Lost on page refresh
+- Doesn't persist across tabs
+- Poor UX for SPAs
+
+#### Cookie Security Flags
+
+**HttpOnly**: Prevents JavaScript access
+
+```javascript
+// This will NOT work (returns undefined):
+document.cookie; // Cannot read httpOnly cookies
+```
+
+**Secure**: HTTPS-only transmission
+
+```typescript
+// Development: secure = false (allows HTTP)
+// Production: secure = true (requires HTTPS)
+secure: process.env.NODE_ENV === "production";
+```
+
+**SameSite**: CSRF mitigation
+
+```typescript
+// "lax" allows cookies on top-level navigation (links, form submissions)
+// "strict" would block even legitimate same-site form POSTs
+sameSite: "lax";
+```
+
+### Token Lifecycle & Refresh Flow
+
+#### 1. Login Flow
+
+```
+User                    Server                  Database
+  |                       |                         |
+  |--POST /api/auth/login-|                         |
+  |  {email, password}    |                         |
+  |                       |--Query user----------->|
+  |                       |<-User data + version---|
+  |                       |                         |
+  |                       |--Increment version----->|
+  |                       |<-New version (5→6)------|
+  |                       |                         |
+  |                       | Generate tokens (v6)    |
+  |                       | - Access: 15min exp     |
+  |                       | - Refresh: 7d exp       |
+  |                       |                         |
+  |<-Set-Cookie (both)----|                         |
+  |  200 OK + user data   |                         |
+```
+
+**Security Log:**
+
+```
+[AUTH] Token pair generated for user@example.com (ID: 123, Version: 6)
+[SECURITY] Login successful for user@example.com.
+           Refresh token version rotated from 5 to 6
+```
+
+#### 2. API Request with Valid Access Token
+
+```
+Client                  Middleware              API Handler
+  |                       |                         |
+  |--GET /api/users/me--->|                         |
+  | (accessToken cookie)  |                         |
+  |                       | Verify JWT              |
+  |                       | Check expiration        |
+  |                       | Extract user data       |
+  |                       |--Request (user data)--->|
+  |                       |                         |
+  |<-User data------------|<-Response---------------|
+```
+
+#### 3. Automatic Token Refresh (Access Token Expired)
+
+```
+Client                  API Client              Server
+  |                       |                         |
+  |--GET /api/users------>|                         |
+  |                       |--Request--------------->|
+  |                       |<-401 Unauthorized-------|
+  |                       |                         |
+  |                       | Detect 401              |
+  |                       |--POST /api/auth/refresh-|
+  |                       |  (refreshToken cookie)  |
+  |                       |                         |
+  |                       |    Verify refresh token |
+  |                       |    Check version match  |
+  |                       |    Increment version    |
+  |                       |    Generate new pair    |
+  |                       |                         |
+  |                       |<-New tokens (v7)--------|
+  |                       |                         |
+  |                       |--Retry GET /api/users-->|
+  |<-User data------------|<-200 OK----------------|
+```
+
+**Security Log:**
+
+```
+[SECURITY] Token rotation successful for user@example.com.
+           Version 6 → 7. Old refresh tokens invalidated.
+[AUTH] Token pair generated for user@example.com (ID: 123, Version: 7)
+```
+
+#### 4. Logout & Token Invalidation
+
+```
+Client                  Server                  Database
+  |                       |                         |
+  |--POST /api/auth/logout|                         |
+  |                       |--Increment version----->|
+  |                       |<-Version (7→8)----------|
+  |                       |                         |
+  |                       | Clear cookies           |
+  |                       |                         |
+  |<-Clear cookies--------|                         |
+  |  (maxAge = 0)         |                         |
+```
+
+**Security Log:**
+
+```
+[SECURITY] User user@example.com logged out.
+           Refresh token version rotated to prevent replay attacks.
+```
+
+**Result**: All existing tokens (v7) are now invalid, even if stolen.
+
+### Token Rotation Mechanism
+
+#### Why Rotate Tokens?
+
+**Without Rotation:**
+
+- Stolen refresh token valid for 7 days
+- No way to invalidate specific token
+- Replay attacks possible
+
+**With Rotation:**
+
+- Each refresh invalidates previous tokens
+- Stolen token becomes useless after legitimate refresh
+- Database version check prevents replay
+
+#### Version-Based Invalidation
+
+**Schema:**
+
+```prisma
+model User {
+  id                  Int    @id @default(autoincrement())
+  email               String @unique
+  refreshTokenVersion Int    @default(0)  // Increments on login/refresh/logout
+  // ...
+}
+```
+
+**Token Payload:**
+
+```json
+{
+  "sub": 123,
+  "ver": 7 // Must match database version
+  // ...
+}
+```
+
+**Verification Logic:**
+
+```typescript
+const payload = verifyRefreshToken(token);
+const user = await prisma.user.findUnique({
+  where: { id: payload.sub },
+});
+
+if (user.refreshTokenVersion !== payload.ver) {
+  // Token is outdated (user logged in elsewhere or logged out)
+  return error("Refresh token expired or rotated", 401);
+}
+
+// Valid token - issue new pair and increment version
+await prisma.user.update({
+  where: { id: user.id },
+  data: { refreshTokenVersion: { increment: 1 } },
+});
+```
+
+### Security Threat Mitigation
+
+#### 🛡️ XSS (Cross-Site Scripting) Protection
+
+**Threat:** Attacker injects malicious JavaScript to steal tokens
+
+**Mitigation:**
+
+- ✅ **HTTP-only cookies**: Tokens not accessible via `document.cookie`
+- ✅ **No localStorage/sessionStorage**: Eliminates primary XSS target
+- ✅ **Input sanitization**: All user input sanitized before rendering ([src/lib/sanitize.ts](src/lib/sanitize.ts))
+- ✅ **CSP headers**: Content Security Policy prevents inline scripts (future enhancement)
+
+**Test:**
+
+```javascript
+// Try in browser console - returns undefined
+console.log(document.cookie); // Cannot see httpOnly cookies
+```
+
+**Remaining Risk:** If attacker achieves XSS, they can still make authenticated requests on behalf of the user (browser auto-sends cookies). Mitigate with:
+
+- Short access token lifetime (15 min)
+- Refresh token rotation
+- Suspicious activity monitoring
+
+#### 🛡️ CSRF (Cross-Site Request Forgery) Protection
+
+**Threat:** Malicious site tricks browser into making authenticated request
+
+**Mitigation:**
+
+- ✅ **SameSite=Lax cookies**: Blocks cross-site POST/PUT/DELETE requests
+- ✅ **SameSite=Lax for refresh**: Allows legitimate same-site form submissions while blocking cross-origin
+- ⚠️ **CSRF tokens** (Optional Enhancement): Add custom `X-CSRF-Token` header for state-changing operations
+
+**Why Lax instead of Strict?**
+
+- `Strict`: Blocks cookies on ALL cross-site navigations (even clicking a link from email)
+- `Lax`: Allows cookies on top-level GET navigation (links) but blocks cross-site POST/PUT/DELETE
+- Trade-off: Better UX while maintaining security for state-changing operations
+
+**Future Enhancement - CSRF Tokens:**
+
+```typescript
+// Generate on page load
+const csrfToken = crypto.randomUUID();
+setCookie("csrf-token", csrfToken);
+
+// Validate on state-changing requests
+if (req.headers.get("x-csrf-token") !== getCookie("csrf-token")) {
+  return error("CSRF token mismatch", 403);
+}
+```
+
+#### 🛡️ Token Replay Attack Protection
+
+**Threat:** Attacker intercepts and reuses stolen tokens
+
+**Mitigation:**
+
+- ✅ **Short access token lifetime**: 15-minute window limits damage
+- ✅ **Refresh token rotation**: Each refresh invalidates previous token
+- ✅ **Version checking**: Database version must match token version
+- ✅ **Logout invalidation**: Immediately bumps version, killing all tokens
+- ✅ **HTTPS only** (production): Prevents man-in-the-middle interception
+
+**Attack Scenario & Defense:**
+
+```
+Day 1, 10:00 AM: User logs in (version 5 → 6)
+Day 1, 10:05 AM: Attacker steals refresh token (version 6)
+Day 1, 10:10 AM: User's app auto-refreshes (version 6 → 7)
+Day 1, 10:15 AM: Attacker tries to use stolen token (version 6)
+                 ❌ REJECTED - version mismatch (expected 7, got 6)
+```
+
+#### 🛡️ Session Fixation Prevention
+
+**Threat:** Attacker forces user to use attacker's session ID
+
+**Mitigation:**
+
+- ✅ **New tokens on login**: Fresh pair generated, old ones discarded
+- ✅ **Version increment**: Prevents pre-login token reuse
+- ✅ **Server-side session control**: Tokens signed server-side, not client-provided
+
+#### 🛡️ Brute Force Protection (Future Enhancement)
+
+**Current Gap:** No rate limiting on login attempts
+
+**Recommended Additions:**
+
+```typescript
+// Using Redis
+const attempts = await redis.incr(`login:attempts:${email}`);
+await redis.expire(`login:attempts:${email}`, 300); // 5 min TTL
+
+if (attempts > 5) {
+  return error("Too many login attempts. Try again in 5 minutes.", 429);
+}
+```
+
+### Security Trade-offs & Reflection
+
+#### ✅ Strengths
+
+| Feature             | Benefit                        | Impact                            |
+| ------------------- | ------------------------------ | --------------------------------- |
+| HTTP-only cookies   | Immune to XSS token theft      | High security                     |
+| 15-min access token | Limits damage from theft       | Moderate UX impact (auto-refresh) |
+| Token rotation      | Prevents replay attacks        | High security                     |
+| Version tracking    | Server-side revocation         | Easy invalidation                 |
+| Dual secrets        | Separation of concerns         | Defense in depth                  |
+| Security logging    | Audit trail for investigations | Compliance & debugging            |
+
+#### ⚠️ Trade-offs
+
+| Trade-off                    | Why We Chose This             | Alternative                                                               |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| **Cookies vs. localStorage** | Security over flexibility     | localStorage enables CDN sites but vulnerable to XSS                      |
+| **15-min access token**      | Balance between security & UX | 5 min = more secure but annoying refreshes; 1 hour = convenient but risky |
+| **SameSite=Lax vs. Strict**  | Usability (email links work)  | Strict blocks legitimate cross-site navigation                            |
+| **No IP binding**            | Support mobile users          | IP binding prevents token use on network switch                           |
+| **Version in DB**            | Revocation support            | Stateless JWT can't be revoked server-side                                |
+
+#### 🔴 Remaining Vulnerabilities
+
+**1. Browser Hijacking**
+
+- **Threat**: If attacker controls user's browser (malware), cookies are accessible
+- **Mitigation**: Short expiry, device fingerprinting (future), security awareness training
+
+**2. Session Theft via XSS**
+
+- **Threat**: Despite HTTP-only, XSS can make requests on user's behalf
+- **Mitigation**: CSP headers, input sanitization, code reviews, regular security audits
+
+**3. Physical Access**
+
+- **Threat**: Unlocked computer = full access until token expiry
+- **Mitigation**: Short access token lifetime, automatic logout on close (future)
+
+**4. No Rate Limiting**
+
+- **Threat**: Unlimited login/refresh attempts
+- **Mitigation**: Implement Redis-based rate limiting (see Brute Force section)
+
+### Implementation Files
+
+| Component        | File                                                                   | Purpose                                      |
+| ---------------- | ---------------------------------------------------------------------- | -------------------------------------------- |
+| Token generation | [src/lib/auth.ts](src/lib/auth.ts)                                     | `generateTokenPair()`, signing, verification |
+| Login endpoint   | [src/app/api/auth/login/route.ts](src/app/api/auth/login/route.ts)     | Password check, token issuance               |
+| Refresh endpoint | [src/app/api/auth/refresh/route.ts](src/app/api/auth/refresh/route.ts) | Token rotation logic                         |
+| Logout endpoint  | [src/app/api/auth/logout/route.ts](src/app/api/auth/logout/route.ts)   | Version bump, cookie clearing                |
+| Middleware       | [src/app/middleware.ts](src/app/middleware.ts)                         | Route protection, token verification         |
+| Auth context     | [src/context/AuthContext.tsx](src/context/AuthContext.tsx)             | Client-side auth state, auto-refresh         |
+| API client       | [src/lib/apiClient.ts](src/lib/apiClient.ts)                           | Auto-refresh on 401 responses                |
+
+### Testing & Demonstration
+
+#### Setup
+
 - Secrets required: set `DATABASE_URL`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` in `.env` (32+ chars for both secrets). The Zod guard in [src/lib/env.ts](src/lib/env.ts) fails fast if any are missing.
-- Access tokens: 15m lifetime, signed with `JWT_SECRET`, stored as HTTP-only, SameSite=Lax cookies named `accessToken`.
-- Refresh tokens: 7d lifetime, signed with `JWT_REFRESH_SECRET`, stored as HTTP-only, SameSite=Strict cookies named `refreshToken`.
-- Rotation: user field `refreshTokenVersion` in [prisma/schema.prisma](prisma/schema.prisma) increments on each login/refresh so older refresh tokens are rejected.
 - Seed login for demos: any seeded user (e.g., `rohan@example.com`) uses password `folkpass123`. Update seeds in [prisma/seed.mjs](prisma/seed.mjs) if you change it.
 
-### Auth endpoints
+#### Quick Test Script (cURL)
 
-- POST `/api/auth/login`: body `{ email, password }`; issues rotated access + refresh tokens and sets cookies.
-- POST `/api/auth/refresh`: uses the secure refresh cookie, bumps `refreshTokenVersion`, and re-issues both tokens (old refresh invalidated by version mismatch).
-- GET `/api/auth/me`: returns the authenticated user when a valid access token is present (cookie or `Authorization: Bearer <token>`).
-- POST `/api/auth/logout`: clears both cookies.
-- Orders now require auth: POST/GET `/api/orders` expect a valid access token; POST checks that either the caller owns `userId` or has role `ADMIN`.
-
-### Token flow evidence
-
-- Cookies are HttpOnly to keep tokens out of JavaScript (mitigates XSS token theft). Refresh uses SameSite=Strict to blunt CSRF; access uses Lax for same-site form/fetch usability.
-- Rotation proof: the refresh response returns `rotatedFromVersion` and `newRefreshTokenVersion`, and the DB column changes on each refresh/login.
-- Expiry handling: when the access token expires, call `/api/auth/refresh` to obtain a fresh pair; clients should retry the original request after refresh.
-
-### Quick curl script
-
-```
+```bash
+# 1. Login - Get tokens in cookies
 curl -i -c cookies.txt -b cookies.txt -X POST http://localhost:3000/api/auth/login \
-	-H "Content-Type: application/json" \
-	-d '{"email":"rohan@example.com","password":"folkpass123"}'
+  -H "Content-Type: application/json" \
+  -d '{"email":"rohan@example.com","password":"folkpass123"}'
+# Look for: Set-Cookie headers for accessToken and refreshToken
+# Note the refreshTokenVersion in response
+
+# 2. Verify access token works
 curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/auth/me
+# Returns user data
+
+# 3. Refresh tokens (see rotation)
 curl -i -c cookies.txt -b cookies.txt -X POST http://localhost:3000/api/auth/refresh
+# Look for: rotatedFromVersion → newRefreshTokenVersion (e.g., 6 → 7)
+
+# 4. Make authenticated request
 curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/orders?page=1
+
+# 5. Logout (invalidates all tokens)
+curl -i -c cookies.txt -b cookies.txt -X POST http://localhost:3000/api/auth/logout
+
+# 6. Try to use old token (should fail)
+curl -i -c cookies.txt -b cookies.txt http://localhost:3000/api/auth/me
+# Returns 401 Unauthorized
 ```
 
-### Threat model notes
+#### Observing Security Logs
 
-- XSS: tokens never touch `localStorage` or `sessionStorage`; only HttpOnly cookies. Sanitize any user input rendered in the UI.
-- CSRF: SameSite cookies plus the ability to pair with Origin/Referer checks on sensitive routes. Refresh token is Strict to block cross-site refresh attempts.
-- Replay: short-lived access tokens plus refresh rotation via `refreshTokenVersion` narrows the usable window of stolen tokens. Consider IP/device binding for stricter setups.
+Watch the terminal running `npm run dev` for security events:
+
+```
+[AUTH] Token pair generated for rohan@example.com (ID: 1, Version: 6)
+[SECURITY] Login successful for rohan@example.com. Refresh token version rotated from 5 to 6
+[SECURITY] Token rotation successful for rohan@example.com. Version 6 → 7. Old refresh tokens invalidated.
+[SECURITY] User rohan@example.com logged out. Refresh token version rotated to prevent replay attacks.
+```
+
+#### Testing Token Rotation
+
+**Scenario**: Prove old refresh tokens become invalid after rotation
+
+```bash
+# 1. Login and save first token
+curl -c cookies1.txt -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"rohan@example.com","password":"folkpass123"}'
+# Note version (e.g., 10)
+
+# 2. Refresh to rotate token
+curl -b cookies1.txt -c cookies2.txt -X POST http://localhost:3000/api/auth/refresh
+# Version is now 11
+
+# 3. Try to use old cookies (should fail)
+curl -i -b cookies1.txt -X POST http://localhost:3000/api/auth/refresh
+# ❌ Returns: "Refresh token expired or rotated" (version mismatch)
+
+# 4. New cookies still work
+curl -i -b cookies2.txt http://localhost:3000/api/auth/me
+# ✅ Success
+```
+
+#### Browser DevTools Testing
+
+1. **Login** at `/login`
+2. **Open DevTools** → Application → Cookies → `http://localhost:3000`
+3. **Observe cookies**:
+   - `accessToken` (HttpOnly ✓, Secure ✓ in prod)
+   - `refreshToken` (HttpOnly ✓, Secure ✓ in prod)
+4. **Try to access via console**:
+   ```javascript
+   console.log(document.cookie); // Won't show httpOnly cookies
+   ```
+5. **Watch Network tab** during API calls to see cookies auto-sent
+6. **Wait 15 minutes** (or modify expiry to 30 seconds for testing) and see auto-refresh happen
+
+### Evidence for Demonstration
+
+Capture the following for your assignment submission:
+
+✅ **Token Structure**: Console log showing JWT header.payload.signature
+✅ **Cookie Storage**: DevTools screenshot showing httpOnly cookies
+✅ **Rotation Logs**: Terminal output showing version increments
+✅ **Security Audit**: Console logs showing XSS prevention (undefined cookie access)
+✅ **CSRF Protection**: Network tab showing SameSite cookie policy
+✅ **Auto-Refresh**: Network waterfall showing 401 → refresh → retry pattern
 
 ## Role-based access control (RBAC)
 
