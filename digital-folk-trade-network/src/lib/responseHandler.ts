@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const sendSuccess = (data: any, message = "Success", status = 200) => {
+export const sendSuccess = (data: unknown, message = "Success", status = 200) => {
   return NextResponse.json(
     {
       success: true,
@@ -16,7 +16,7 @@ export const sendError = (
   message = "Something went wrong",
   code = "INTERNAL_ERROR",
   status = 500,
-  details?: any
+  details?: unknown
 ) => {
   return NextResponse.json(
     {

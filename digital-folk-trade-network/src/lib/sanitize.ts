@@ -11,15 +11,15 @@ export function sanitizeInput(value: unknown): string {
   return sanitizeHtml(value, SANITIZE_OPTIONS).trim();
 }
 
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-  const clone: Record<string, any> = Array.isArray(obj) ? [] : {};
+export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
+  const clone = (Array.isArray(obj) ? [] : {}) as Record<string, unknown>;
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "string") {
       clone[key] = sanitizeInput(value);
     } else if (Array.isArray(value)) {
       clone[key] = value.map((v) => (typeof v === "string" ? sanitizeInput(v) : v));
     } else if (value && typeof value === "object") {
-      clone[key] = sanitizeObject(value as Record<string, any>);
+      clone[key] = sanitizeObject(value as Record<string, unknown>);
     } else {
       clone[key] = value;
     }

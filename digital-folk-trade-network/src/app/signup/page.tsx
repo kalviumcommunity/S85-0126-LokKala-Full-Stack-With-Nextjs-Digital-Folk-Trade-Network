@@ -24,14 +24,15 @@ export default function SignupPage() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let body = {};
+        let body: Record<string, unknown> = {};
         try {
-          body = text ? JSON.parse(text) : {};
+          body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
         } catch {}
-        throw new Error((body as any).message || `Request failed (${res.status})`);
+        const message = typeof body.message === "string" ? body.message : undefined;
+        throw new Error(message || `Request failed (${res.status})`);
       }
-      const json = await res.json().catch(() => ({}));
-      if ((json as any).success) {
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (json.success === true) {
         window.location.href = "/login";
         return;
       }
@@ -47,9 +48,9 @@ export default function SignupPage() {
       <div className="w-full max-w-sm rounded border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-medium text-slate-800">Sign up</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-          <FormInput label="Name" name="name" register={register} error={errors.name?.message as any} />
-          <FormInput label="Email" name="email" type="email" register={register} error={errors.email?.message as any} />
-          <FormInput label="Password" name="password" type="password" register={register} error={errors.password?.message as any} />
+          <FormInput label="Name" name="name" register={register} error={errors.name?.message} />
+          <FormInput label="Email" name="email" type="email" register={register} error={errors.email?.message} />
+          <FormInput label="Password" name="password" type="password" register={register} error={errors.password?.message} />
 
           <button
             type="submit"

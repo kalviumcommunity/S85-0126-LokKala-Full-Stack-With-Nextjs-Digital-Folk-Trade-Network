@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function ArtDetailError({
@@ -39,7 +40,7 @@ export default function ArtDetailError({
             Failed to Load Artwork
           </h2>
           <p className="text-sm text-red-700 dark:text-red-300">
-            We couldn't retrieve the artwork details. The item might not exist or there may be a connection issue.
+            We couldn&apos;t retrieve the artwork details. The item might not exist or there may be a connection issue.
           </p>
           {error.message && (
             <p className="mt-2 text-xs text-red-600 dark:text-red-400">
@@ -58,18 +59,18 @@ export default function ArtDetailError({
 
         {/* Alternative actions */}
         <div className="flex flex-col space-y-2">
-          <a
+          <Link
             href="/marketplace"
             className="block text-sm text-red-700 underline hover:text-red-900 dark:text-red-300 dark:hover:text-red-100"
           >
             Browse All Artworks
-          </a>
-          <a
+          </Link>
+          <Link
             href="/"
             className="block text-sm text-red-700 underline hover:text-red-900 dark:text-red-300 dark:hover:text-red-100"
           >
             Return to Home
-          </a>
+          </Link>
         </div>
       </div>
     </main>
