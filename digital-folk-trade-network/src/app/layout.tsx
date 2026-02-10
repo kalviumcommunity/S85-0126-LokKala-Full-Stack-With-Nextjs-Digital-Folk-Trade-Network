@@ -1,6 +1,7 @@
 import "./globals.css";
 import { LayoutWrapper } from "@/components";
 import { Toaster } from "react-hot-toast";
+import Providers from "./providers";
 
 export default function RootLayout({
   children,
@@ -10,9 +11,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+        <Providers>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </Providers>
 
         {/* Global Toast Provider */}
         <Toaster

@@ -1,4 +1,6 @@
 
+import Link from "next/link";
+
 export const revalidate = 60;
 
 type Artwork = {
@@ -28,7 +30,7 @@ export default async function Marketplace() {
       <ul>
         {artworks.map((art) => (
           <li key={art.id}>
-            <a href={`/art/${art.id}`}>{art.title}</a>
+            <Link href={`/art/${art.id}`}>{art.title}</Link>
           </li>
         ))}
       </ul>

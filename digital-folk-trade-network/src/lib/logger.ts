@@ -1,7 +1,7 @@
 type LogLevel = 'info' | 'error';
 
 interface LogMeta {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 function log(level: LogLevel, message: string, meta?: LogMeta) {

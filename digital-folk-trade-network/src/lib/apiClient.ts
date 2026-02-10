@@ -109,7 +109,7 @@ export const api = {
   /**
    * POST request with auto-refresh
    */
-  post: async (url: string, body?: any, options?: ApiRequestInit) => {
+  post: async (url: string, body?: unknown, options?: ApiRequestInit) => {
     return apiClient(url, {
       ...options,
       method: "POST",
@@ -124,7 +124,7 @@ export const api = {
   /**
    * PUT request with auto-refresh
    */
-  put: async (url: string, body?: any, options?: ApiRequestInit) => {
+  put: async (url: string, body?: unknown, options?: ApiRequestInit) => {
     return apiClient(url, {
       ...options,
       method: "PUT",
@@ -139,7 +139,7 @@ export const api = {
   /**
    * PATCH request with auto-refresh
    */
-  patch: async (url: string, body?: any, options?: ApiRequestInit) => {
+  patch: async (url: string, body?: unknown, options?: ApiRequestInit) => {
     return apiClient(url, {
       ...options,
       method: "PATCH",

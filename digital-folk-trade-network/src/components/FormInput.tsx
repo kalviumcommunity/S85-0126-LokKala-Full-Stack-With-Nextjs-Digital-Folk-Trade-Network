@@ -1,10 +1,10 @@
-import { UseFormRegister } from "react-hook-form";
+import { type FieldValues, type UseFormRegister } from "react-hook-form";
 
 interface FormInputProps {
   label: string;
   name: string;
   type?: string;
-  register: UseFormRegister<any>;
+  register: UseFormRegister<FieldValues>;
   error?: string | undefined;
 }
 

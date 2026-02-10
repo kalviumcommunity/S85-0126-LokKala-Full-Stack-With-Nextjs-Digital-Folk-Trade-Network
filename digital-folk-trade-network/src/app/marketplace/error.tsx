@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function MarketplaceError({
@@ -39,7 +40,7 @@ export default function MarketplaceError({
             Unable to Load Marketplace
           </h2>
           <p className="text-sm text-red-700 dark:text-red-300">
-            We're having trouble loading the artworks. Please check your connection and try again.
+            We&apos;re having trouble loading the artworks. Please check your connection and try again.
           </p>
           {error.message && (
             <p className="mt-2 text-xs text-red-600 dark:text-red-400">
@@ -57,12 +58,12 @@ export default function MarketplaceError({
         </button>
 
         {/* Alternative action */}
-        <a
+        <Link
           href="/"
           className="block text-sm text-red-700 underline hover:text-red-900 dark:text-red-300 dark:hover:text-red-100"
         >
           Return to Home
-        </a>
+        </Link>
       </div>
     </main>
   );
