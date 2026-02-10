@@ -157,6 +157,77 @@ The RBAC system is designed for evolution:
 
 See [RBAC_DOCUMENTATION.md](RBAC_DOCUMENTATION.md) for the complete scalability roadmap.
 
+## Security Headers
+
+Comprehensive security headers protect against XSS, clickjacking, MIME-sniffing, and protocol downgrade attacks.
+
+### Implemented Headers
+
+✅ **HSTS** - Forces HTTPS connections (2 year max-age)  
+✅ **Content Security Policy** - Controls resource loading  
+✅ **X-Frame-Options** - Prevents clickjacking (DENY)  
+✅ **X-Content-Type-Options** - Blocks MIME-sniffing  
+✅ **Referrer-Policy** - Protects user privacy  
+✅ **Permissions-Policy** - Disables unused browser features  
+✅ **CORS** - Controls cross-origin API access
+
+### Quick Test
+
+```bash
+# Check headers in browser DevTools
+# Network tab → Select request → Response Headers
+
+# Or with curl
+curl -I http://localhost:3000
+
+# Expected:
+# Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+# Content-Security-Policy: default-src 'self'; ...
+# X-Frame-Options: DENY
+```
+
+### CORS Usage
+
+```typescript
+// API route with CORS
+import { setCorsHeaders } from "@/lib/cors";
+
+export async function GET(req: Request) {
+  const origin = req.headers.get("origin");
+  const response = NextResponse.json({ data: "..." });
+  return setCorsHeaders(response, origin);
+}
+```
+
+### Security Grade
+
+Run security scans to verify:
+
+- **SecurityHeaders.com:** Expected grade A or A+
+- **Mozilla Observatory:** Expected score 90+
+
+### Documentation
+
+📖 **Complete Security Documentation:** [SECURITY_HEADERS.md](SECURITY_HEADERS.md)
+
+Includes:
+
+- Detailed explanation of each header
+- Configuration code and examples
+- Third-party integration impact (Google Fonts, Analytics, CDNs)
+- Testing and verification steps
+- Production deployment checklist
+- Security scan results
+
+### Files
+
+**Security Infrastructure:**
+
+- `next.config.ts` - Global security headers configuration
+- `src/lib/securityHeaders.ts` - Security header utilities
+- `src/lib/cors.ts` - CORS configuration and helpers
+- `src/app/api/health/route.ts` - Example CORS-enabled endpoint
+
 ## Layout and UI architecture
 
 Component hierarchy
