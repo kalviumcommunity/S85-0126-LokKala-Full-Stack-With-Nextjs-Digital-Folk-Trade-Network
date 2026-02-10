@@ -6,10 +6,156 @@ Prisma is configured as the type-safe data layer for this Next.js app backed by 
 
 - Tooling: [jest.config.js](jest.config.js) uses `next/jest` with [jest.setup.js](jest.setup.js) loading `@testing-library/jest-dom` and jsdom. Module aliases `@/*` resolve to `src/`, and CSS modules are mocked via `identity-obj-proxy`.
 - Commands: `pnpm test` runs the suite; `pnpm test:coverage` enforces the global 80% thresholds. The run on 2026-02-04 reported statements 100%, branches 92.85%, functions 100%, lines 100% over the covered scope.
-- Sample tests: logic at [__tests__/math.test.ts](__tests__/math.test.ts) exercises [src/utils/math.ts](src/utils/math.ts); component coverage comes from [__tests__/components/Button.test.tsx](__tests__/components/Button.test.tsx) targeting [src/components/ui/Button.tsx](src/components/ui/Button.tsx).
+- Sample tests: logic at [**tests**/math.test.ts](__tests__/math.test.ts) exercises [src/utils/math.ts](src/utils/math.ts); component coverage comes from [**tests**/components/Button.test.tsx](__tests__/components/Button.test.tsx) targeting [src/components/ui/Button.tsx](src/components/ui/Button.tsx).
 - Coverage scope: collection currently targets the shared Button atom and `src/utils` helpers to keep signal high; expand `collectCoverageFrom` when you add more unit coverage (e.g., Cards, RBAC helpers, Prisma guards).
 - CI hint: add `pnpm test:coverage` to your GitHub Actions workflow so PRs fail when thresholds regress.
 - Reflection: tests cover basic math helpers and primary button behavior (click + loading disable). Gaps remain across API routes, forms, and context hooks—prioritize service-layer tests next (testing pyramid: more unit, some integration, few E2E with Playwright/Cypress). Document planned E2E flows alongside future coverage expansions.
+
+## Role-Based Access Control (RBAC)
+
+A comprehensive RBAC system controls access to resources across both API endpoints and UI components.
+
+### Quick Overview
+
+**Roles:** GUEST → USER → ARTIST → ADMIN (ascending privileges)
+
+**Permission Format:** `resource:action[:scope]`
+
+- Example: `artifacts:create`, `orders:read:own`, `*` (admin)
+
+**Usage:**
+
+```typescript
+// API Route Protection
+import { withRBAC, requireAdmin } from "@/lib/rbacMiddleware";
+
+export async function DELETE(req: Request) {
+  const { user, error } = await withRBAC(req, {
+    action: "artifacts:delete",
+    resource: "artifacts",
+  });
+  if (error) return error;
+  // Authorized - proceed
+}
+
+// Admin-only endpoint
+export async function GET(req: Request) {
+  const { user, error } = await requireAdmin(req);
+  if (error) return error;
+  // Admin verified
+}
+```
+
+```tsx
+// UI Permission Guards
+import { Can, AdminOnly } from "@/components/rbac/PermissionGuards";
+import { usePermissions } from "@/hooks/usePermissions";
+
+function MyComponent() {
+  const { can, isAdmin } = usePermissions();
+
+  return (
+    <>
+      <Can do="artifacts:create">
+        <button>Create Artifact</button>
+      </Can>
+
+      <AdminOnly>
+        <AdminPanel />
+      </AdminOnly>
+
+      <button disabled={!can("orders:create")}>Place Order</button>
+    </>
+  );
+}
+```
+
+### Features
+
+✅ **Granular Permissions** - 19 permissions for ARTIST, 9 for USER, 3 for GUEST  
+✅ **Ownership-Based Access** - `:own` suffix restricts to user's resources  
+✅ **API Route Protection** - Middleware helpers with proper 401/403 responses  
+✅ **UI Guards** - React components and hooks for declarative permission checks  
+✅ **Audit Logging** - Every access decision logged with colored console output  
+✅ **Type Safety** - Full TypeScript support with strict permission types  
+✅ **Test Suite** - Comprehensive tests covering allowed/denied scenarios  
+✅ **Interactive Demo** - Visit `/rbac-demo` to explore the system
+
+### Permission Matrix (Highlights)
+
+| Resource             | ADMIN | ARTIST   | USER | GUEST |
+| -------------------- | ----- | -------- | ---- | ----- |
+| Create Artifacts     | ✅    | ✅       | ❌   | ❌    |
+| Update Own Artifacts | ✅    | ✅       | ❌   | ❌    |
+| Delete Artifacts     | ✅    | ✅ (own) | ❌   | ❌    |
+| Create Orders        | ✅    | ❌       | ✅   | ❌    |
+| View Own Orders      | ✅    | ✅       | ✅   | ❌    |
+| Delete Users         | ✅    | ❌       | ❌   | ❌    |
+
+### Audit Logging
+
+Every permission check is logged:
+
+```
+[RBAC ✅] role=ARTIST permission=artifacts:create resource=artifacts userId=5 decision=ALLOWED
+[RBAC ❌] role=USER permission=users:delete resource=users userId=8 decision=DENIED reason="Insufficient permissions"
+```
+
+Access audit logs via admin endpoint:
+
+```bash
+GET /api/admin/audit-logs?limit=100
+```
+
+### Testing
+
+Run the RBAC test suite to see allowed/denied scenarios:
+
+```bash
+npm run test:rbac
+```
+
+Interactive demo at: `http://localhost:3000/rbac-demo`
+
+### Documentation
+
+📖 **Complete RBAC Documentation:** [RBAC_DOCUMENTATION.md](RBAC_DOCUMENTATION.md)
+
+Includes:
+
+- Detailed permission matrix for all resources
+- API route protection patterns
+- UI guard component examples
+- Audit logging guide
+- Scalability roadmap (PBAC/ABAC evolution)
+- Security best practices
+
+### Files
+
+**Core RBAC:**
+
+- `src/lib/rbac.ts` - Permission definitions and access logic
+- `src/lib/rbacMiddleware.ts` - API route protection helpers
+- `src/hooks/usePermissions.ts` - React permission hooks
+- `src/components/rbac/PermissionGuards.tsx` - UI guard components
+
+**Examples:**
+
+- `src/app/api/admin/route.ts` - Admin-only endpoint
+- `src/app/api/artifacts/[id]/route.ts` - Ownership-based access
+- `src/app/rbac-demo/page.tsx` - Interactive UI demo
+- `src/lib/rbacTests.ts` - Comprehensive test suite
+
+### Scalability
+
+The RBAC system is designed for evolution:
+
+**Current:** Static role-based permissions  
+**Phase 2:** Database-driven role management  
+**Phase 3:** Conditional policies (time, location, attributes)  
+**Future:** Full Policy-Based Access Control (PBAC) / Attribute-Based Access Control (ABAC)
+
+See [RBAC_DOCUMENTATION.md](RBAC_DOCUMENTATION.md) for the complete scalability roadmap.
 
 ## Layout and UI architecture
 
