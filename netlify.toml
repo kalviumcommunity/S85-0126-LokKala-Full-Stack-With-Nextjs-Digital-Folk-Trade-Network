@@ -1,6 +1,6 @@
 [build]
   base = "digital-folk-trade-network"
-  command = "npx prisma generate && npm run build"
+  command = "rm -f pnpm-lock.yaml && npm install --legacy-peer-deps && npx prisma generate && npm run build"
   publish = ".next"
 
 [[plugins]]
