@@ -4,24 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { AppRole, checkAccess } from "@/lib/rbac";
 import { withRBAC, verifyOwnership } from "@/lib/rbacMiddleware";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
-import { NextRequest } from "next/server";
 
 /**
  * GET /api/artifacts/[id]
  * Get a specific artifact (Public, but logs access)
  */
-
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   const artifactId = Number(id);
-
-
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id: idStr } = await params;
-  const id = Number(idStr);
   
   // Get user if authenticated (optional)
 
@@ -61,18 +54,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * PUT /api/artifacts/[id]
  * Update an artifact (Owner or Admin only)
  */
-working_on_deployment
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
   const artifactId = Number(id);
-
-
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id: idStr } = await params;
-  const id = Number(idStr);
   
   // Authenticate
 
@@ -125,7 +112,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  * DELETE /api/artifacts/[id]
  * Delete an artifact (Owner or Admin only)
  */
-
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -133,19 +119,12 @@ export async function DELETE(
   const { id } = await context.params;
   const artifactId = Number(id);
 
-
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-
   const { user, error } = await withRBAC(req, {
     action: "artifacts:delete",
     resource: "artifacts",
   });
 
   if (error) return error;
-
-
-  const { id: idStr } = await params;
-  const id = Number(idStr);
   
   // Get artifact to check ownership
 
