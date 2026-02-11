@@ -12,7 +12,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky install",
+    "prepare": "node -e \"if (process.env.CI !== 'true') { require('child_process').execSync('husky install', { stdio: 'inherit' }) }\" || true",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "jest",
