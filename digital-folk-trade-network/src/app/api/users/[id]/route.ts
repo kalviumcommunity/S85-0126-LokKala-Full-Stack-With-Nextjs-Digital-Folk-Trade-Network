@@ -7,7 +7,13 @@ import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
 
 const USERS_CACHE_TTL_SECONDS = 60;
 
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+ main
   try {
     const { id } = await params;
     const userId = Number(id);
@@ -15,6 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (Number.isNaN(userId)) {
       return sendError("Invalid user id", ERROR_CODES.BAD_REQUEST, 400);
     }
+
 
     const auth = await requireAuthPayload(request);
     if (!auth) {
