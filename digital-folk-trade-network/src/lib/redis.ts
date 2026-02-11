@@ -2,6 +2,7 @@
 // Redis is intentionally DISABLED in local development.
 // Cache must NEVER break auth or routing.
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export const redis = {
   async get(_key: string) {
     return null;
@@ -20,3 +21,4 @@ export const redis = {
     return null;
   },
 };
+/* eslint-enable @typescript-eslint/no-unused-vars */

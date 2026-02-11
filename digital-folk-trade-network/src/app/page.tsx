@@ -54,7 +54,7 @@ export default function Home() {
             <p>Current theme: <span className="font-semibold">{theme}</span></p>
             {isAuthenticated ? (
               <div className="space-y-2">
-                <p>Logged in as: {user}</p>
+                <p>Logged in as: {user?.name ?? user?.email}</p>
                 <Button label="Logout" onClick={logout} variant="secondary" fullWidth />
               </div>
             ) : (

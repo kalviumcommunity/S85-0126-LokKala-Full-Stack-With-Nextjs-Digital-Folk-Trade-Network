@@ -68,7 +68,7 @@ export default function RBACDemoPage() {
           
           <Cannot do="artifacts:delete">
             <p className="text-sm text-gray-600 italic">
-              ℹ️ You don't have permission to delete artifacts
+              ℹ️ You don&apos;t have permission to delete artifacts
             </p>
           </Cannot>
         </div>

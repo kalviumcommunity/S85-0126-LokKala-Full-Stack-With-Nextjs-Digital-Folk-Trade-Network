@@ -3,13 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { AppRole, checkAccess } from "@/lib/rbac";
 import { withRBAC, verifyOwnership } from "@/lib/rbacMiddleware";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { NextRequest } from "next/server";
 
 /**
  * GET /api/artifacts/[id]
  * Get a specific artifact (Public, but logs access)
  */
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params;
+  const id = Number(idStr);
   
   // Get user if authenticated (optional)
   const auth = await requireAuthPayload(req);
@@ -49,8 +51,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
  * PUT /api/artifacts/[id]
  * Update an artifact (Owner or Admin only)
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params;
+  const id = Number(idStr);
   
   // Authenticate
   const auth = await requireAuthPayload(req);
@@ -107,15 +110,16 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
  * DELETE /api/artifacts/[id]
  * Delete an artifact (Owner or Admin only)
  */
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, error } = await withRBAC(req, {
     action: "artifacts:delete",
     resource: "artifacts",
   });
-  
+
   if (error) return error;
-  
-  const id = Number(params.id);
+
+  const { id: idStr } = await params;
+  const id = Number(idStr);
   
   // Get artifact to check ownership
   const artifact = await prisma.artifact.findUnique({

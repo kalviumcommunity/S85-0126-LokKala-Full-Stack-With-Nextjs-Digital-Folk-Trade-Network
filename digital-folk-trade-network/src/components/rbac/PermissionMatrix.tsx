@@ -1,6 +1,6 @@
 "use client";
 
-import { AppRole, ROLE_PERMISSIONS, ROLE_DESCRIPTIONS, Resource, Action } from "@/lib/rbac";
+import { AppRole, ROLE_PERMISSIONS, ROLE_DESCRIPTIONS, Resource, Action, Permission } from "@/lib/rbac";
 
 interface PermissionMatrixProps {
   className?: string;
@@ -29,7 +29,7 @@ export function PermissionMatrix({ className = "" }: PermissionMatrixProps) {
     if (permissions.includes("*")) return true;
     
     const permission = own ? `${resource}:${action}:own` : `${resource}:${action}`;
-    return permissions.includes(permission as any);
+    return permissions.includes(permission as Permission);
   };
   
   return (
