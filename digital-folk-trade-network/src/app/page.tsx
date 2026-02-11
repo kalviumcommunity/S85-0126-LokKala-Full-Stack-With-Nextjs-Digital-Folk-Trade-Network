@@ -188,15 +188,6 @@ export default function Home() {
                 >
                   Add to Cart
                 </button>
-
-        <Card title="Auth & state" subtitle="Context-driven demo" tone="muted">
-          <div className="space-y-3 text-sm">
-            <p>Current theme: <span className="font-semibold">{theme}</span></p>
-            {isAuthenticated ? (
-              <div className="space-y-2">
-                <p>Logged in as: {user?.name ?? user?.email}</p>
-                <Button label="Logout" onClick={logout} variant="secondary" fullWidth />
-
               </div>
             </Card>
           ))}
