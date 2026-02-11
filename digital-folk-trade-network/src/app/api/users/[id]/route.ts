@@ -11,8 +11,11 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+ main
   try {
-    const { id } = await context.params;
+    const { id } = await params;
     const userId = Number(id);
 
     if (Number.isNaN(userId)) {

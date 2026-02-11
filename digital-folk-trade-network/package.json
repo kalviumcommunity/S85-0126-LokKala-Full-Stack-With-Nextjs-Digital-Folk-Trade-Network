@@ -2,12 +2,17 @@
   "name": "digital-folk-trade-network",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky install",
+    "prepare": "node -e \"if (process.env.CI !== 'true') { require('child_process').execSync('husky install', { stdio: 'inherit' }) }\" || true",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "jest",
