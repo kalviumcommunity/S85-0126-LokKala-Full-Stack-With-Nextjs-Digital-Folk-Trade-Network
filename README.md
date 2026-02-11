@@ -486,7 +486,7 @@ Try it: after installing deps run:
 Optional package.json edit (only if you prefer to record deps there)
 Add to dependencies in package.json:
 Then run:
-
+##
 
 ### Reflection
 Using CSS Modules with a component-driven architecture provides strong encapsulation, predictable styling, and long-term maintainability without reliance on third-party UI frameworks.
