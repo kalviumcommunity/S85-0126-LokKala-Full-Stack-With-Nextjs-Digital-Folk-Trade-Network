@@ -9,6 +9,10 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
+  # Force npm usage and disable pnpm
+  NETLIFY_USE_YARN = "false"
+  NETLIFY_USE_PNPM = "false"
+  NPM_CONFIG_PACKAGE_LOCK = "true"
 
 # Functions configuration for API routes
 [functions]
