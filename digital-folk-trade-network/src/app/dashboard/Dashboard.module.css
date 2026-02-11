@@ -16,6 +16,14 @@
   border-bottom: 1px solid rgba(185, 28, 28, 0.12);
 }
 
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .title {
   margin: 0;
   font-size: 34px;
@@ -23,6 +31,38 @@
   letter-spacing: -0.02em;
   font-weight: 800;
   color: #7f1d1d;
+}
+
+.profileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 28, 28, 0.18);
+  background: #fffaf8;
+  text-decoration: none;
+  color: #7f1d1d;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 120ms ease, box-shadow 160ms ease;
+  box-shadow: 0 8px 18px rgba(127, 29, 29, 0.08);
+}
+
+.profileLink:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(127, 29, 29, 0.12);
+}
+
+.profileLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: #9f1239;
+}
+
+.profileName {
+  font-weight: 700;
 }
 
 .subtitle {
@@ -88,5 +128,10 @@
 
   .title {
     font-size: 28px;
+  }
+
+  .profileLink {
+    width: 100%;
+    justify-content: space-between;
   }
 }
