@@ -76,7 +76,7 @@ export function generateTokenPair(user: {
    ========================= */
 export function verifyAccessToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, ENV.JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, ENV.JWT_SECRET) as unknown as TokenPayload;
   } catch {
     return null;
   }
@@ -84,7 +84,7 @@ export function verifyAccessToken(token: string): TokenPayload | null {
 
 export function verifyRefreshToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, ENV.JWT_REFRESH_SECRET) as TokenPayload;
+    return jwt.verify(token, ENV.JWT_REFRESH_SECRET) as unknown as TokenPayload;
   } catch {
     return null;
   }

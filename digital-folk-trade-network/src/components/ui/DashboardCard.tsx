@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./DashboardCard.module.css";
 
 export type DashboardCardProps = {

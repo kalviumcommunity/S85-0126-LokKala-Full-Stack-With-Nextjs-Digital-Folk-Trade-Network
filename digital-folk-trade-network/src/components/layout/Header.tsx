@@ -17,7 +17,7 @@ const navItems = [
   { href: "/about", label: "About" },
 ];
 
-export default function Header() {
+export default function Header({ title }: { title?: string }) {
   const pathname = usePathname();
 
   return (
@@ -48,6 +48,7 @@ export default function Header() {
             );
           })}
         </nav>
+        {title ? <div className="ml-4 text-lg font-semibold">{title}</div> : null}
 
         <div className={styles.actions}>
           <Link className={styles.actionLink} href="/dashboard">
