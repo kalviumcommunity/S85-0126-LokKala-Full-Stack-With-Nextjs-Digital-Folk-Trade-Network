@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import styles from "./Dashboard.module.css";
 import { DashboardCard } from "@/components";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "react-hot-toast";
+import { useAuthContext } from "@/context/AuthContext";
 
 export default function DashboardPage() {
+  const { user, isLoading: isAuthLoading } = useAuthContext();
   const [usersCount, setUsersCount] = useState<string>("--");
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -121,10 +124,21 @@ export default function DashboardPage() {
     usersError ??
     "Registered participants across the folk trade network.";
 
+  const profileName = useMemo(() => {
+    if (isAuthLoading) return "Loading…";
+    return user?.name ?? "Profile";
+  }, [isAuthLoading, user?.name]);
+
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Digital Folk Trade Dashboard</h1>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>Digital Folk Trade Dashboard</h1>
+          <Link href="/profile" className={styles.profileLink}>
+            <span className={styles.profileLabel}>Welcome,</span>
+            <span className={styles.profileName}>{profileName}</span>
+          </Link>
+        </div>
         <p className={styles.subtitle}>
 
           A calm overview of the cultural marketplace—artists, artworks, and

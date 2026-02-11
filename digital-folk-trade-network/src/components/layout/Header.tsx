@@ -8,6 +8,11 @@ import styles from "./Header.module.css";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/profile", label: "Profile" },
+  { href: "/products", label: "Products" },
+  { href: "/artisans/1", label: "Artisans" },
+  { href: "/cart", label: "Cart" },
+  { href: "/checkout", label: "Checkout" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/about", label: "About" },
 ];
