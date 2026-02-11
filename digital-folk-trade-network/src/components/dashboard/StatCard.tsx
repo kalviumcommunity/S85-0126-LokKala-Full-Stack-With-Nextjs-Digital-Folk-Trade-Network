@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import StatCard from "./components/StatCard";
+import { DashboardCard } from "@/components";
 import Toast from "@/components/ui/Toast"; // native toast you created
 
 export default function DashboardPage() {
@@ -74,9 +74,9 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard title="Total Users" value={loading ? null : usersCount} />
-          <StatCard title="Artifacts Listed" value="—" />
-          <StatCard title="Files Uploaded" value="—" />
+          <DashboardCard title="Total Users" value={loading ? "--" : (usersCount ?? "--")} />
+          <DashboardCard title="Artifacts Listed" value="—" />
+          <DashboardCard title="Files Uploaded" value="—" />
         </div>
 
         {error && (

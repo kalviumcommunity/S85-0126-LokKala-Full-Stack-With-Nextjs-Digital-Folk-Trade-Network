@@ -1,20 +1,20 @@
-import { type FieldValues, type UseFormRegister } from "react-hook-form";
+import { type UseFormRegister, type FieldValues, type Path } from "react-hook-form";
 
-interface FormInputProps {
+interface FormInputProps<T extends FieldValues> {
   label: string;
-  name: string;
+  name: Path<T>;
   type?: string;
-  register: UseFormRegister<FieldValues>;
+  register: UseFormRegister<T>;
   error?: string | undefined;
 }
 
-export default function FormInput({
+export default function FormInput<T extends FieldValues>({
   label,
   name,
   type = "text",
   register,
   error,
-}: FormInputProps) {
+}: FormInputProps<T>) {
   return (
     <div className="mb-3">
       <label htmlFor={name} className="block mb-1 font-medium">

@@ -82,7 +82,7 @@ export default function DashboardPage() {
           toast.dismiss();
           toast.error("Unexpected data format");
         }
-      } catch (error) {
+      } catch {
         if (!cancelled) {
           setUsersError("Unable to load users right now.");
           setUsersCount("--");

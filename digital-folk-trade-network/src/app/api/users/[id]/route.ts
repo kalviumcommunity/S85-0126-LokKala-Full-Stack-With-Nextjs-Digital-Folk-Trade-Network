@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { checkAccess } from "@/lib/rbac";
 import { redis } from "@/lib/redis";
 import { ERROR_CODES, sendError, sendSuccess } from "@/lib/responseHandler";
+import { NextRequest } from "next/server";
 
 const USERS_CACHE_TTL_SECONDS = 60;
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const auth = await requireAuthPayload(request);
     if (!auth) {
